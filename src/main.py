@@ -21,7 +21,6 @@ F_sampling_freq = 512e6  # 512 MHz
 Num_samples = 2**18
 # chirp duration T = 0.1 - 0.4 ms
 T_chirp_duration = 2e-4 # 0.2 ms
-f_c = 10 # ???
 Beta_slope = B_freq_range/T # B = Beta*T
 
 def f_i(t):
