@@ -34,7 +34,7 @@ def s(t):
 
 #f_i = [sp.signal.sawtooth(2 * np.pi * 5 * t) for t in t]
 #plt.plot(t, f_i)
-plt.plot(t, B*sp.signal.sawtooth(2 * np.pi * t))
+#plt.plot(t, B*sp.signal.sawtooth(2 * np.pi * t))
 
 # math.cos(2*math.pi*t)
-plt.plot(t, np.cos(2 * np.pi * 5 * t))
+#plt.plot(t, np.cos(2 * np.pi * 5 * t))
