@@ -13,22 +13,21 @@ import numpy as np
 import scipy as sp
 
 #t = np.arange(0, 5, 0.01)
-# Chirp's end time
-T_chirp_duration = 1e-4  # 0.1 ms - 0.4 ms
-T = 2*T_chirp_duration # window duration (we first see the transmitting of the message than nothing)
+T_chirp_duration = 1e-4  # chirp duration: 0.1 ms to 0.4 ms
+#T = 2*T_chirp_duration # window duration (we first see the transmitting of the message than nothing)
 Number_of_samples = 2**18 # 2**18 # 262144 samples
 t = np.linspace(0, T_chirp_duration, Number_of_samples, endpoint=True)
-#t = np.linspace(0, T, Number_of_samples*2, endpoint=True)
+t_extended = np.linspace(0, 2*T_chirp_duration, 2*Number_of_samples, endpoint=True)
 
 B_freq_range = 200e6 # 200 MHz
 f_c = 24*10e9 # Carrier frequency 24 GHz
 F_sampling_freq = 512e6  # 512 MHz
-# chirp duration T = 0.1 - 0.4 ms
 
 Beta_slope = B_freq_range/T_chirp_duration # B = Beta*T
 
 def f_i(t):
     #return Beta_slope*(t%T_chirp_duration)
+    #return Beta_slope*(t*(1-int(t/T_chirp_duration))) # does not work
     return Beta_slope*t
 
 def phi_i(t):
@@ -37,8 +36,8 @@ def phi_i(t):
 def s_with_carrier(t):
     return np.cos(2*np.pi*f_c*t + phi_i(t))
 
-def s(t):
-    return np.cos(phi_i(t))
+def s_baseband(t):
+    return np.exp(1j*phi_i(t))
 
 #f_i = [sp.signal.sawtooth(2 * np.pi * 5 * t) for t in t]
 freq = f_i(t)
@@ -58,7 +57,7 @@ plt.title('Instantaneous frequency')
 plt.show() # display plot
 
 # Transmitted signal in baseband plot in time domain:
-plt.plot(t, s(t))
+plt.plot(t, s_baseband(t))
 plt.grid()
 plt.legend(['$s(t)$'])
 plt.xlabel('Time (s)')
@@ -70,8 +69,9 @@ plt.show() # display plot
 
 # FFT of signal (in baseband) => signal (FT) plot in frequency domain:
 # ? shift the FFT ?
-#plt.plot(freq, np.fft.fftshift(s(t))) # ? not freq, but -freq/2 to freq/2
-plt.plot(freq, np.fft.fft(s(t)))
+#plt.plot(freq, np.fft.fftshift(s(t))) # ? not freq, but -freq/2 to freq/2 nahhh
+freq_range = np.fft.fftshift(np.fft.fftfreq(Number_of_samples, d=1/F_sampling_freq))
+plt.plot(freq_range, np.fft.fft(s_baseband(t)))
 plt.grid()
 plt.legend(['$S(f)$'])
 plt.xlabel('Frequency (Hz)')
