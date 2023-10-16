@@ -15,10 +15,10 @@ import scipy as sp
 #t = np.arange(0, 5, 0.01)
 # Chirp's end time
 T_chirp_duration = 1e-4  # 0.1 ms - 0.4 ms
-#T = 0.1 # 100ms
+T = 2*T_chirp_duration # window duration (we first see the transmitting of the message than nothing)
 Number_of_samples = 2**18 # 2**18 # 262144 samples
 t = np.linspace(0, T_chirp_duration, Number_of_samples, endpoint=True)
-#t = np.linspace(0, T, Number_of_samples, endpoint=True)
+#t = np.linspace(0, T, Number_of_samples*2, endpoint=True)
 
 B_freq_range = 200e6 # 200 MHz
 f_c = 24*10e9 # Carrier frequency 24 GHz
@@ -28,10 +28,11 @@ F_sampling_freq = 512e6  # 512 MHz
 Beta_slope = B_freq_range/T_chirp_duration # B = Beta*T
 
 def f_i(t):
+    #return Beta_slope*(t%T_chirp_duration)
     return Beta_slope*t
 
 def phi_i(t):
-    return np.pi*Beta_slope*(t**2)
+    return np.pi*Beta_slope*(t**2) # ? should integrate rather
 
 def s_with_carrier(t):
     return np.cos(2*np.pi*f_c*t + phi_i(t))
@@ -56,7 +57,7 @@ plt.title('Instantaneous frequency')
 
 plt.show() # display plot
 
-# Signal plot in time domain:
+# Transmitted signal in baseband plot in time domain:
 plt.plot(t, s(t))
 plt.grid()
 plt.legend(['$s(t)$'])
@@ -67,8 +68,10 @@ plt.title('FM transmitted signal (radar chirp in time domain - real part)')
 
 plt.show() # display plot
 
-# FFT of signal => signal (FT) plot in frequency domain:
-plt.plot(freq, np.fft.fft(s(t))) #? s(t) or s_with_carrier(t)
+# FFT of signal (in baseband) => signal (FT) plot in frequency domain:
+# ? shift the FFT ?
+#plt.plot(freq, np.fft.fftshift(s(t))) # ? not freq, but -freq/2 to freq/2
+plt.plot(freq, np.fft.fft(s(t)))
 plt.grid()
 plt.legend(['$S(f)$'])
 plt.xlabel('Frequency (Hz)')
@@ -81,7 +84,18 @@ plt.show() # display plot
 #f = np.fft.fftshift(f)
 
 # Bandwidth of the signal:
-B = B_freq_range # ?
+Bandwidth = 2*B_freq_range+2*(1/T_chirp_duration) # Carlson's rule
 # or 15 MHz ? found
-print('Bandwidth of the signal: B =', B, 'Hz')
+print('Bandwidth of the signal: B =', Bandwidth, 'Hz')
+
+chirp_durations = np.linspace(1e-4,4e-4,endpoint=True)
+plt.plot(chirp_durations,2*B_freq_range+2*(1/chirp_durations))
+plt.grid()
+plt.title('Bandwidth depending on the chirp duration (between .1ms and .4ms)')
+plt.xlabel('Chirp duration (s)')
+plt.ylabel('Bandwidth (Hz)')
+
+plt.show()
+
+
 
