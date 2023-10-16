@@ -15,7 +15,7 @@ import scipy as sp
 #t = np.arange(0, 5, 0.01)
 # Chirp's end time
 T_chirp_duration = 1e-4  # 0.1 ms - 0.4 ms
-T = 0.001 # 100ms
+#T = 0.1 # 100ms
 Number_of_samples = 2**18 # 2**18 # 262144 samples
 t = np.linspace(0, T_chirp_duration, Number_of_samples, endpoint=True)
 #t = np.linspace(0, T, Number_of_samples, endpoint=True)
@@ -68,7 +68,7 @@ plt.title('FM transmitted signal (radar chirp in time domain - real part)')
 plt.show() # display plot
 
 # FFT of signal => signal (FT) plot in frequency domain:
-plt.plot(freq, np.fft.fft(s(t)))
+plt.plot(freq, np.fft.fft(s(t))) #? s(t) or s_with_carrier(t)
 plt.grid()
 plt.legend(['$S(f)$'])
 plt.xlabel('Frequency (Hz)')
@@ -81,6 +81,7 @@ plt.show() # display plot
 #f = np.fft.fftshift(f)
 
 # Bandwidth of the signal:
-B = B_freq_range
+B = B_freq_range # ?
+# or 15 MHz ? found
 print('Bandwidth of the signal: B =', B, 'Hz')
 
