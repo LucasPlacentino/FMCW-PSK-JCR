@@ -13,7 +13,7 @@ import numpy as np
 import scipy as sp
 
 #t = np.arange(0, 5, 0.01)
-T_chirp_duration = 1e-4  # chirp duration: 0.1 ms to 0.4 ms
+T_chirp_duration = 2e-4  # chirp duration: 0.1 ms to 0.4 ms
 #T = 2*T_chirp_duration # window duration (we first see the transmitting of the message than nothing)
 Number_of_samples = 2**18 # 2**18 # 262144 samples
 t = np.linspace(0, T_chirp_duration, Number_of_samples, endpoint=True)
@@ -41,6 +41,7 @@ def s_baseband(t):
 
 #f_i = [sp.signal.sawtooth(2 * np.pi * 5 * t) for t in t]
 freq = f_i(t)
+print('f_i: ', freq, 'Hz')
 plt.plot(t, freq)
 plt.grid()
 plt.legend(['$f_i$'])
@@ -57,6 +58,7 @@ plt.title('Instantaneous frequency')
 plt.show() # display plot
 
 # Transmitted signal in baseband plot in time domain:
+print("s_baseband(t): ", s_baseband(t))
 plt.plot(t, s_baseband(t))
 plt.grid()
 plt.legend(['$s(t)$'])
@@ -71,7 +73,9 @@ plt.show() # display plot
 # ? shift the FFT ?
 #plt.plot(freq, np.fft.fftshift(s(t))) # ? not freq, but -freq/2 to freq/2 nahhh
 freq_range = np.fft.fftshift(np.fft.fftfreq(Number_of_samples, d=1/F_sampling_freq))
-plt.plot(freq_range, np.fft.fft(s_baseband(t)))
+print('freq_range: ', freq_range, 'Hz')
+print('fft: ', np.fft.fft(s_baseband(t)))
+plt.plot(freq_range, np.fft.fftshift(s_baseband(t)))
 plt.grid()
 plt.legend(['$S(f)$'])
 plt.xlabel('Frequency (Hz)')
@@ -99,3 +103,4 @@ plt.show()
 
 
 
+# repliement spectral ? (aliasing) => fenêtre de Hamming
