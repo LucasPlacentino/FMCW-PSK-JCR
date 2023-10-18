@@ -1,8 +1,7 @@
 """
-ELEC-H311
+ELEC-H311 - Joint Communications and Radar simulation project
 Lucas Placentino
 Salman Houdaibi
-R R [possiblement, probablement, éventuellement, il se pourrait, il y a une possibilité, surtout qu'Anthony est parti (pas pour de vrai, il a quitté l'option t'as capté chacal) en vrai y a grave moyen, sauf s'il fait avec Louis]
 """
 
 import matplotlib.pyplot as plt
