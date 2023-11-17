@@ -49,49 +49,53 @@ fft_freq = sft.fftfreq(Number_of_samples, d=1 / F_sampling_freq)
 fft_shifted = sft.fftshift(fft_signal)
 fft_freq_shifted = sft.fftshift(fft_freq)
 
-# Plotting
-plt.figure(figsize=(12, 10))
+def main():
+    # Plotting
+    plt.figure(figsize=(12, 10))
 
-# Instantaneous frequency plot
-plt.subplot(3, 1, 1)
-plt.plot(t, freq_instantaneous)
-plt.grid()
-plt.title("Instantaneous frequency $f_i(t)$")
-plt.xlabel("Time (s)")
-plt.ylabel("Frequency (Hz)")
+    # Instantaneous frequency plot
+    plt.subplot(3, 1, 1)
+    plt.plot(t, freq_instantaneous)
+    plt.grid()
+    plt.title("Instantaneous frequency $f_i(t)$")
+    plt.xlabel("Time (s)")
+    plt.ylabel("Frequency (Hz)")
 
-# Baseband signal plot
-plt.subplot(3, 1, 2)
-plt.plot(t, signal_baseband.real, label="Real")
-plt.plot(t, signal_baseband.imag, label="Imaginary", linestyle="--")
-plt.grid()
-plt.title("Baseband Signal $s_{baseband}(t)$")
-plt.xlabel("Time (s)")
-plt.ylabel("Amplitude")
-plt.legend()
+    # Baseband signal plot
+    plt.subplot(3, 1, 2)
+    plt.plot(t, signal_baseband.real, label="Real")
+    plt.plot(t, signal_baseband.imag, label="Imaginary", linestyle="--")
+    plt.grid()
+    plt.title("Baseband Signal $s_{baseband}(t)$")
+    plt.xlabel("Time (s)")
+    plt.ylabel("Amplitude")
+    plt.legend()
 
-# FFT plot
-plt.subplot(3, 1, 3)
-plt.plot(fft_freq_shifted, np.abs(fft_shifted))
-plt.grid()
-plt.title("Fourier Transform of Baseband Signal")
-plt.xlabel("Frequency (Hz)")
-plt.ylabel("Magnitude")
+    # FFT plot
+    plt.subplot(3, 1, 3)
+    plt.plot(fft_freq_shifted, np.abs(fft_shifted))
+    plt.grid()
+    plt.title("Fourier Transform of Baseband Signal")
+    plt.xlabel("Frequency (Hz)")
+    plt.ylabel("Magnitude")
 
-plt.tight_layout()
-plt.show()
+    plt.tight_layout()
+    plt.show()
 
-# Bandwidth calculation
-Bandwidth = 2 * B_freq_range + 2 * (1 / T_chirp_duration)
-print(f"Bandwidth of the signal: {Bandwidth} Hz")
+    # Bandwidth calculation
+    Bandwidth = 2 * B_freq_range + 2 * (1 / T_chirp_duration)
+    print(f"Bandwidth of the signal: {Bandwidth} Hz")
 
-# Bandwidth as a function of chirp duration
-chirp_durations = np.linspace(1e-4, 4e-4, 100, endpoint=True)
-bandwidths = 2 * B_freq_range + 2 * (1 / chirp_durations)
-plt.figure()
-plt.plot(chirp_durations, bandwidths)
-plt.grid()
-plt.title("Bandwidth depending on the chirp duration (between 0.1ms and 0.4ms)")
-plt.xlabel("Chirp duration (s)")
-plt.ylabel("Bandwidth (Hz)")
-plt.show()
+    # Bandwidth as a function of chirp duration
+    chirp_durations = np.linspace(1e-4, 4e-4, 100, endpoint=True)
+    bandwidths = 2 * B_freq_range + 2 * (1 / chirp_durations)
+    plt.figure()
+    plt.plot(chirp_durations, bandwidths)
+    plt.grid()
+    plt.title("Bandwidth depending on the chirp duration (between 0.1ms and 0.4ms)")
+    plt.xlabel("Chirp duration (s)")
+    plt.ylabel("Bandwidth (Hz)")
+    plt.show()
+
+if __name__ == "__main__":
+    main()
