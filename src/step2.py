@@ -36,7 +36,7 @@ Number_guard_samples = 5
 K_slow_time_fft_size = 256
 
 
-# 1. Generate the FMCW signal composed of K chirps
+# --- 1. --- Generate the FMCW signal composed of K chirps
 
 chirp = 
 
@@ -47,7 +47,11 @@ K_chirps = K_slow_time_fft_size*
 
 
 
-# 2. Simulate the impact of the single-target channel on the FMCW signal (the extension to a multi-target channel is obviously the sum of the target contributions)
+# --- 2. --- Simulate the impact of the single-target channel on the FMCW signal (the extension to a multi-target channel is obviously the sum of the target contributions)
+
+# single target: shifted signal (shifted in time by a constant delay in freq by a constant Doppler). Neglect amplitude changes due to losses over the distance.
+
+# multiple targets: multiple persons moving at different speeds and distances from the radar. The signal is the sum of the shifted signals of each target.
 
 
 
@@ -56,9 +60,10 @@ K_chirps = K_slow_time_fft_size*
 
 
 
-# 3. Implement the radar processing: mixing with the transmitted signal, sampling at F_s, S/P conversion,FFT over the fast and slow time dimensions
+# --- 3. --- Implement the radar processing: mixing with the transmitted signal, sampling at F_s, S/P conversion,FFT over the fast and slow time dimensions
 
-
+# mixing signals ? mixed signal sampled at F_s. S/P conversion: sampled signal from serial format to parallel format forming blocks of samples. Then 2D FFT (over the fast and slow time dimensions) of the parallel converted signal => generates the RDM.
+# amplitude peaks in the RDM are the targets.
 
 
 
