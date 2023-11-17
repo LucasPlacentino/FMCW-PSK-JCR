@@ -11,6 +11,10 @@ import plotly.graph_objects as go
 import numpy as np
 import scipy as sp
 
+"""
+    Step 1: FMCW signal
+"""
+
 #t = np.arange(0, 5, 0.01)
 T_chirp_duration = 2e-4  # chirp duration: 0.1 ms to 0.4 ms
 #T = 2*T_chirp_duration # window duration (we first see the transmitting of the message than nothing)
@@ -68,6 +72,8 @@ plt.title('FM transmitted signal (radar chirp in time domain - real part)')
 
 plt.show() # display plot
 
+
+### TODO: ----------------------- FIX THE FFT ? ----------------------- ###
 # FFT of signal (in baseband) => signal (FT) plot in frequency domain:
 # ? shift the FFT ?
 #plt.plot(freq, np.fft.fftshift(s(t))) # ? not freq, but -freq/2 to freq/2 nahhh
