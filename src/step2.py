@@ -19,6 +19,8 @@ import scipy as sp
     Target range is max 20m, and speed is max 2m/s with respect to the radar
 """
 
+T_chirp_duration = 2e-4  # chirp duration: 0.1 ms to 0.4 ms
+
 fc_carrier_freq = 24e9  # f_c
 
 B_freq_range = 200e6  # 200 MHz
