@@ -14,6 +14,9 @@ import scipy as sp
 
 """
     Step 2: Radar processing
+
+    Generate a Range Doppler Map (RDM)
+    Target range is max 20m, and speed is max 2m/s with respect to the radar
 """
 
 fc_carrier_freq = 24e9  # f_c
@@ -30,4 +33,38 @@ Number_guard_samples = 5
 
 K_slow_time_fft_size = 256
 
-# Radar processign is implemented and applied on a multi-target channel.
+
+# 1. Generate the FMCW signal composed of K chirps
+
+chirp = 
+
+K_chirps = K_slow_time_fft_size*
+
+
+
+
+
+
+# 2. Simulate the impact of the single-target channel on the FMCW signal (the extension to a multi-target channel is obviously the sum of the target contributions)
+
+
+
+
+
+
+
+
+# 3. Implement the radar processing: mixing with the transmitted signal, sampling at F_s, S/P conversion,FFT over the fast and slow time dimensions
+
+
+
+
+
+
+
+
+
+
+
+
+
