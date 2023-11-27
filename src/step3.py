@@ -27,13 +27,15 @@ T_chirp_duration = 2e-4  # Durée du chirp
 Number_of_samples = 2**18
 B_freq_range = 200e6
 f_c = 24e9 # carrier freq
-F_sampling_freq = 512e6
+F_sim_sampling_freq = 512e6 # simulation
+F_radar_sampling_freq = 2e6 # receiver sampling freq
 Beta_slope = B_freq_range / T_chirp_duration
 t = np.linspace(0, T_chirp_duration, Number_of_samples, endpoint=True)
 
+#! compute the SNR
 # example ? :
-SNR_dB = 10 # dB
-SNR_lib = 10**(SNR_dB/10) # linear
+SNR_dB = 10 #! arbitrary (dB)
+SNR_lib = 10**(SNR_dB/10) # (linear)
 
 # Transmitted signal
 Tx = np.exp(1j * np.pi * Beta_slope * (t**2))
@@ -42,7 +44,8 @@ Tx = np.exp(1j * np.pi * Beta_slope * (t**2))
 Rx = np.copy(Tx) # no noise
 
 # Additive white Gaussian noise (AWGN)
-AGWN = np.random.normal(0, 1, Number_of_samples) + 1j * np.random.normal(0, 1, Number_of_samples) # complex noise
+AGWN = np.random.normal(0, 1, Number_of_samples) + 1j * np.random.normal(0, 1, Number_of_samples) # complex noise, both real and imaginary part are independant and are white noise
+#! noise takes SNR in input ??
 Rx_noise = Rx + AGWN # received signal with noise
 
 
@@ -125,7 +128,8 @@ plt.grid(True)
 plt.show()
 
 
-# Receiver operating characteristic curve (ROC)
+# Receiver operating characteristic curve (ROC) for different values of the SNR
+#! for different values of the SNR
 
 plt.figure(figsize=(8, 8))
 plt.plot(P_false_alarm, P_mis_detection, label="ROC curve")
@@ -136,4 +140,6 @@ plt.legend()
 plt.grid(True)
 #plt.tight_layout()
 plt.show()
+
+# Discuss the choice of the SNR values
 
