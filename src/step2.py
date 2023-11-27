@@ -1,3 +1,9 @@
+"""
+ELEC-H311 - Joint Communications and Radar simulation project
+Lucas Placentino
+Salman Houdaibi
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.fft as sft
@@ -39,6 +45,7 @@ fft_freq = sft.fftfreq(Number_of_samples, d=1 / F_sampling_freq)
 fft_shifted_modulated = sft.fftshift(fft_signal_modulated)
 fft_freq_shifted = sft.fftshift(fft_freq)
 
+
 def main():
     # Affichage
     plt.figure(figsize=(12, 10))
@@ -63,6 +70,7 @@ def main():
 
     plt.tight_layout()
     plt.show()
+
 
 if __name__ == "__main__":
     main()
