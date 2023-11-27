@@ -35,7 +35,9 @@ samples_per_symbol = int(F_sampling_freq / symbol_rate)  # Échantillons par sym
 psk_sequence = np.repeat(symbols, samples_per_symbol)
 
 # Redimensionner la séquence PSK pour qu'elle corresponde à la durée du chirp
-psk_sequence = np.pad(psk_sequence, (0, Number_of_samples - len(psk_sequence)), "constant")
+psk_sequence = np.pad(
+    psk_sequence, (0, Number_of_samples - len(psk_sequence)), "constant"
+)
 
 # Modulation PSK du signal FMCW
 signal_baseband = s_baseband(t)
@@ -72,6 +74,14 @@ def main():
 
     plt.tight_layout()
     plt.show()
+
+    #! TODO: Simulate the impact of the single-target channel on the FMCW signal (the extension to a multi-target channel is obviously the sum of the target contributions)
+
+    #! TODO: Implement the radar processing: mixing with the transmitted signal, sampling at F_s, S/P conversion,FFT over the fast and slow time dimensions
+
+    #! TODO: RDM obtained at the output of the 2 dimensional FFT for multiple randomly generated scenarios. Identify the correc targets positions on the RDM.
+
+    #! TODO: Compute the range and Doppler resolutions and discuss the relevance of the radar parameters for the considered scenario.
 
 
 if __name__ == "__main__":
