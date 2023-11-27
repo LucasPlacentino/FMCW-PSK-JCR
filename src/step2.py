@@ -21,9 +21,11 @@ F_sampling_freq = 512e6
 Beta_slope = B_freq_range / T_chirp_duration
 t = np.linspace(0, T_chirp_duration, Number_of_samples, endpoint=True)
 
+
 # Fonction du signal de baseband
 def s_baseband(t):
     return np.exp(1j * np.pi * Beta_slope * (t**2))
+
 
 # Génération de la séquence PSK (exemple avec BPSK)
 N_symbols = 100  # Nombre de symboles PSK
@@ -33,7 +35,7 @@ samples_per_symbol = int(F_sampling_freq / symbol_rate)  # Échantillons par sym
 psk_sequence = np.repeat(symbols, samples_per_symbol)
 
 # Redimensionner la séquence PSK pour qu'elle corresponde à la durée du chirp
-psk_sequence = np.pad(psk_sequence, (0, Number_of_samples - len(psk_sequence)), 'constant')
+psk_sequence = np.pad(psk_sequence, (0, Number_of_samples - len(psk_sequence)), "constant")
 
 # Modulation PSK du signal FMCW
 signal_baseband = s_baseband(t)
