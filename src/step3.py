@@ -29,6 +29,7 @@ B_freq_range = 200e6
 f_c = 24e9  # carrier freq
 F_sim_sampling_freq = 512e6  # simulation
 F_radar_sampling_freq = 2e6  # receiver sampling freq
+T_sampling_period = 1 / F_radar_sampling_freq
 Beta_slope = B_freq_range / T_chirp_duration
 t = np.linspace(0, T_chirp_duration, Number_of_samples, endpoint=True)
 
@@ -73,7 +74,7 @@ plt.ylabel("Amplitude")
 plt.legend()
 
 plt.tight_layout()
-plt.show()
+#plt.show() #! TODO: REMOVE COMMENT
 
 
 # Generate the Range Doppler Map (RDM)
@@ -86,17 +87,17 @@ doppler_profile = sft.fftshift(sft.fft(range_profile, Nd))  # ,axes=0 or nothing
 
 plt.figure(figsize=(10, 6))
 #! NOT WORKING, TODO: FIX ?
-# plt.imshow(np.abs(doppler_profile), extent=[-Nd/2, Nd/2, 0, Ns], cmap="jet", aspect="auto")
+plt.imshow(np.abs(doppler_profile), extent=[-Nd/2, Nd/2, 0, Ns], cmap="jet", aspect="auto") #, vmin=0, vmax=1) #? vmin and vmax ?
 
-doppler_bins = np.fft.fftshift(np.fft.fftfreq(Nd, T_s))
-range_bins = np.arange(Ns) * (F_radar_sampling_freq / (2 * Ns))
-D, R = np.meshgrid(doppler_bins, range_bins)
-plt.pcolormesh(D, R, np.abs(doppler_profile), cmap='jet')
+# doppler_bins = np.fft.fftshift(np.fft.fftfreq(Nd, T_sampling_period))
+# range_bins = np.arange(Ns) * (F_radar_sampling_freq / (2 * Ns))
+# D, R = np.meshgrid(doppler_bins, range_bins)
+# plt.pcolormesh(D, R, np.abs(doppler_profile), cmap='jet')
 
 plt.title("Range Doppler Map")
 plt.xlabel("Doppler (Hz)")
 plt.ylabel("Range (m)")
-# plt.colorbar(label="Amplitude") #TODO: remove comment when img plot fixed
+plt.colorbar(label="Amplitude") #TODO: remove comment when img plot fixed
 # plt.tight_layout()
 plt.show()
 
