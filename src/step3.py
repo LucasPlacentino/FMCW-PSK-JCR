@@ -23,12 +23,12 @@ import scipy.fft as sft
     - Discuss the choice of the SNR values
 """
 
-T_chirp_duration = 2e-4  # Durée du chirp
+T_chirp_duration = 2e-4  # 0.1 to 0.4 ms
 Number_of_samples = 2**18
-B_freq_range = 200e6
-f_c = 24e9  # carrier freq
-F_sim_sampling_freq = 512e6  # simulation
-F_radar_sampling_freq = 2e6  # receiver sampling freq
+B_freq_range = 200e6  # 200 MHz
+f_c = 24e9  # carrier freq, 24 GHz
+F_sim_sampling_freq = 512e6  # simulation, 512 MHz
+F_radar_sampling_freq = 2e6  # receiver sampling freq, 2 MHz
 T_sampling_period = 1 / F_radar_sampling_freq
 Beta_slope = B_freq_range / T_chirp_duration
 t = np.linspace(0, T_chirp_duration, Number_of_samples, endpoint=True)
@@ -40,20 +40,24 @@ Tx = np.exp(1j * np.pi * Beta_slope * (t**2))
 Rx = np.copy(Tx)  # no noise
 
 # Additive white Gaussian noise (AWGN)
+#noise_power = np.mean(np.abs(Tx) ** 2) / SNR_lin  #! SNR value computed or arbitrary ?
 AGWN = np.random.normal(0, 1, Number_of_samples) + 1j * np.random.normal(
     0, 1, Number_of_samples
 )  # complex noise, both real and imaginary parts are independant and are white noise
-#! noise takes SNR in input ??
+#! noise takes SNR in input ? -> through noise_power ?
 Rx_noise = Rx + AGWN  # received signal with noise
 
 #! TODO: compute the SNR: power of the complex signal divided by the power of the complex noise ?
+SNR = np.abs(Rx) / np.abs(AGWN)  #! Rx or Tx ?
+
 SNR_dB = 10  #! arbitrary (dB) TODO: compute it instead
 SNR_lib = 10 ** (SNR_dB / 10)  # (linear)
 
 # compute signal power: modulus squared (square of the amplitude), then mean? Module au carré = puissance
 # because signal is ergodic, we can compute the mean over time instead of the ensemble mean
+signal_power = np.mean(np.abs(Rx) ** 2)  #! Rx or Tx ?
 
-# noise white gaussian noise: mean = 0, variance = 1, power = variance = 1 or 2 ?
+# white gaussian noise: mean = 0, variance = 1, power = variance = 1 or 2 ??
 
 
 plt.figure(figsize=(12, 6))
@@ -66,28 +70,36 @@ plt.legend()
 
 # ------------ cannot see the no-noise signal on this plot, maybe seperate graphs?
 plt.subplot(2, 1, 2)
-plt.plot(t, Rx.real, label="Rx Real")
 plt.plot(t, Rx_noise.real, label="Rx Real with noise")
-plt.title("Received signal")
+plt.plot(t, Rx.real, label="Rx Real")
+plt.title("Received signal with and without noise")
 plt.xlabel("Time (s)")
 plt.ylabel("Amplitude")
 plt.legend()
 
 plt.tight_layout()
-#plt.show() #! TODO: REMOVE COMMENT
+plt.show() #! TODO: REMOVE COMMENT
 
 
 # Generate the Range Doppler Map (RDM)
-Ns = 512  #! number of samples ?
-Nd = 256  # number of ?
 
-range_profile = sft.fft(Rx_noise, Ns)
+Nr = 512  #! number of range cells / OR number of samples on each chirp ?
+Nd = 256  # number of doppler cells / number of chirps in one sequence
+t_rdm = np.linspace(0, Nr*Nd, Nd*T_chirp_duration, endpoint=True) #? correct ? needed ?
+
+range_profile = sft.fft(Rx_noise, Nr)
 
 doppler_profile = sft.fftshift(sft.fft(range_profile, Nd))  # ,axes=0 or nothing ?
 
+range_bins = np.arange(Nr) * (F_radar_sampling_freq / (2 * Nr))
+doppler_bins = np.fft.fftshift(np.fft.fftfreq(Nd, T_sampling_period))
+
+
 plt.figure(figsize=(10, 6))
 #! NOT WORKING, TODO: FIX ?
-plt.imshow(np.abs(doppler_profile), extent=[-Nd/2, Nd/2, 0, Ns], cmap="jet", aspect="auto") #, vmin=0, vmax=1) #? vmin and vmax ?
+plt.imshow(
+    np.abs(doppler_profile), extent=[-Nd / 2, Nd / 2, 0, Ns], cmap="jet", aspect="auto"
+)  # , vmin=0, vmax=1) #? vmin and vmax ?
 
 # doppler_bins = np.fft.fftshift(np.fft.fftfreq(Nd, T_sampling_period))
 # range_bins = np.arange(Ns) * (F_radar_sampling_freq / (2 * Ns))
@@ -97,7 +109,7 @@ plt.imshow(np.abs(doppler_profile), extent=[-Nd/2, Nd/2, 0, Ns], cmap="jet", asp
 plt.title("Range Doppler Map")
 plt.xlabel("Doppler (Hz)")
 plt.ylabel("Range (m)")
-plt.colorbar(label="Amplitude") #TODO: remove comment when img plot fixed
+plt.colorbar(label="Amplitude")  # TODO: remove comment when img plot fixed
 # plt.tight_layout()
 plt.show()
 
@@ -142,6 +154,7 @@ plt.grid(True)
 plt.show()
 
 
+
 # Receiver operating characteristic curve (ROC) for different values of the SNR (or threshold?)
 #! for different values of the SNR
 
@@ -160,3 +173,6 @@ plt.show()
 
 # -------------------
 # we applied the noise directly to the samples, because it is easier for us to do so in this project (we dont have to compute through a low pass filter etc)
+
+
+#! would be interesting to compute the maximum detection range for a given SNR
