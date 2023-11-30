@@ -94,15 +94,17 @@ doppler_profile = sft.fftshift(sft.fft(range_profile, Nd))  # ,axes=0 or nothing
 range_bins = np.arange(Nr) * (F_radar_sampling_freq / (2 * Nr))
 doppler_bins = np.fft.fftshift(np.fft.fftfreq(Nd, T_sampling_period))
 
+# plot the RDM
+
 
 plt.figure(figsize=(10, 6))
 #! NOT WORKING, TODO: FIX ?
 plt.imshow(
-    np.abs(doppler_profile), extent=[-Nd / 2, Nd / 2, 0, Ns], cmap="jet", aspect="auto"
+    np.abs(doppler_profile), extent=[-Nd / 2, Nd / 2, 0, Nr], cmap="jet", aspect="auto"
 )  # , vmin=0, vmax=1) #? vmin and vmax ?
 
 # doppler_bins = np.fft.fftshift(np.fft.fftfreq(Nd, T_sampling_period))
-# range_bins = np.arange(Ns) * (F_radar_sampling_freq / (2 * Ns))
+# range_bins = np.arange(Ns) * (F_radar_sampling_freq / (2 * Nr))
 # D, R = np.meshgrid(doppler_bins, range_bins)
 # plt.pcolormesh(D, R, np.abs(doppler_profile), cmap='jet')
 
