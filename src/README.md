@@ -1,5 +1,6 @@
-# MATLAB source files (.m)
+# python source files
 
 https://github.com/LucasPlacentino/FMCW-PSK-JCR
 
-# FUCK MATLAB ALL MY HOMIES HATE MATLAB
+# F*CK MATLAB
+# ALL MY HOMIES HATE MATLAB
