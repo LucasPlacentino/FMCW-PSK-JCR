@@ -90,7 +90,7 @@ mixed_signal = signal_multiple_targets * FMCW_over_K_chirps  # ? np.conj() neede
 # sampling at F_s
 sampled_signal = mixed_signal[
     :: int(F_radar_sampling_freq * T_chirp_duration / N_samples_per_chirp)
-]  #! ???
+]  #! TODO: ayo what is this sh*t ???
 
 # S/P conversion
 # sp_conversion = sampled_signal.reshape((N_samples_per_chirp, -1))
@@ -142,7 +142,7 @@ plt.imshow(
 plt.title("Range Doppler Map")
 plt.xlabel("Doppler (Hz)")
 plt.ylabel("Range (m)")
-plt.colorbar(label="Amplitude")  # ? what is Amplitude ? should we put it in dB ?
+plt.colorbar(label="Amplitude")  # ? what Amplitude ? should we put it in dB ?
 # plt.tight_layout()
 plt.show()
 
@@ -155,10 +155,10 @@ doppler_freq_estimation_resolution = 1 / (K_slow_time_fft_size * T_chirp_duratio
 print("Range resolution: ", range_estimation_resolution)
 print("Doppler resolution: ", doppler_freq_estimation_resolution)
 
-# Relevance of radar parameters for the considered scenario:
-# The frequency range B is the bandwidth of the transmitted signal. It directly determines the range resolution, inversely-proportional. For our case, it is set to 200 MHz.
-# The chirp duration T_chirp_duration is the time duration of a chirp. It directly determines the Doppler frequency resolution, inversely-proportional. For our case, it is set between 0.1 and 0.4 ms.
-# The number of chirps K_slow_time_fft_size is the number of chirps in a sequence. It directly determines the Doppler frequency resolution, inversely-proportional. For our case, it is set to 256.
+print("--- Relevance of radar parameters for the considered scenario: ---")
+print("The frequency range B is the bandwidth of the transmitted signal. It directly determines the range resolution, inversely-proportional. For our case, it is set to 200 MHz.")
+print("The chirp duration T_chirp_duration is the time duration of a chirp. It directly determines the Doppler frequency resolution, inversely-proportional. For our case, it is set between 0.1 and 0.4 ms.")
+print("The number of chirps K_slow_time_fft_size is the number of chirps in a sequence. It directly determines the Doppler frequency resolution, inversely-proportional. For our case, it is set to 256.")
 
 
 def plot():
@@ -185,11 +185,11 @@ def plot():
 
     #! done ? TODO: Simulate the impact of the single-target channel on the FMCW signal (the extension to a multi-target channel is obviously the sum of the target contributions)
 
-    #! TODO: Implement the radar processing: mixing with the transmitted signal, sampling at F_s, S/P conversion,FFT over the fast and slow time dimensions
+    #! S/P does,'t work ? TODO: Implement the radar processing: mixing with the transmitted signal, sampling at F_s, S/P conversion,FFT over the fast and slow time dimensions
 
-    #! done ? TODO: RDM obtained at the output of the 2 dimensional FFT for multiple randomly generated scenarios. Identify the correc targets positions on the RDM.
+    #! done somewhat ? TODO: RDM obtained at the output of the 2 dimensional FFT for multiple randomly generated scenarios. Identify the correc targets positions on the RDM.
 
-    #! TODO: Compute the range and Doppler resolutions and discuss the relevance of the radar parameters for the considered scenario.
+    #* DONE Compute the range and Doppler resolutions and discuss the relevance of the radar parameters for the considered scenario.
 
 
 if __name__ == "__main__":
