@@ -77,18 +77,15 @@ target_velocity = 1  #! arbitrary, in m/s
 target_signal = target_contribution(target_range, target_velocity)
 
 # multiple targets:
-target_ranges = [12, 26, 30]  #! arbitrary, in m
-target_velocities = [1, 3, 2]  #! arbitrary, in m/s
-target_signals = [
-    target_contribution(target_ranges[i], target_velocities[i])
-    for i in range(len(target_ranges))
-]
-target_signals_sum = sum(target_signals)
+targets = [(11, 3), (20, 5), (3, 0.4), (34, -2), (25, 0)]
+signal_multiple_targets = sum(
+    target_contribution(range, speed) for range, speed in targets
+)
 
 # --- 2. --- Implement the radar processing: mixing with the transmitted signal, sampling at F_s, S/P conversion,FFT over the fast and slow time dimensions
 
 # mixing with the transmitted signal
-mixed_signal = target_signals_sum * FMCW_over_K_chirps  # ? np.conj() needed?
+mixed_signal = signal_multiple_targets * FMCW_over_K_chirps  # ? np.conj() needed?
 
 # sampling at F_s
 sampled_signal = mixed_signal[
@@ -96,23 +93,19 @@ sampled_signal = mixed_signal[
 ]  #! ???
 
 # S/P conversion
-#sp_conversion = sampled_signal.reshape((N_samples_per_chirp, -1))
+# sp_conversion = sampled_signal.reshape((N_samples_per_chirp, -1))
 
 # Fast time FFT
-#fast_time_fft = sft.fft(sp_conversion, axis=0)
+# fast_time_fft = sft.fft(sp_conversion, axis=0)
 
 # Slow time FFT
-#slow_time_fft = sft.fft(fast_time_fft, axis=1)
+# slow_time_fft = sft.fft(fast_time_fft, axis=1)
 
 # --- 3. --- RDM obtained at the output of the 2 dimensional FFT for multiple randomly generated scenarios. Identify the correct targets positions on the RDM.
 
 #! TODO: should use the FFTs above (---2---)
 # generate multiple random scenarios
-targets = [(11, 3), (20, 5), (3, 0.4), (34, -2), (25, 0)]
-rx_multiple_targets = sum(
-    target_contribution(range, speed) for range, speed in targets
-)
-Rx = rx_multiple_targets
+Rx = signal_multiple_targets
 
 Nr = 512  #! number of range cells / OR number of samples on each chirp ?
 Nd = 256  # number of doppler cells / number of chirps in one sequence
@@ -190,11 +183,11 @@ def plot():
     # plt.tight_layout()
     plt.show()
 
-    #! TODO: Simulate the impact of the single-target channel on the FMCW signal (the extension to a multi-target channel is obviously the sum of the target contributions)
+    #! done ? TODO: Simulate the impact of the single-target channel on the FMCW signal (the extension to a multi-target channel is obviously the sum of the target contributions)
 
     #! TODO: Implement the radar processing: mixing with the transmitted signal, sampling at F_s, S/P conversion,FFT over the fast and slow time dimensions
 
-    #! TODO: RDM obtained at the output of the 2 dimensional FFT for multiple randomly generated scenarios. Identify the correc targets positions on the RDM.
+    #! done ? TODO: RDM obtained at the output of the 2 dimensional FFT for multiple randomly generated scenarios. Identify the correc targets positions on the RDM.
 
     #! TODO: Compute the range and Doppler resolutions and discuss the relevance of the radar parameters for the considered scenario.
 
