@@ -33,6 +33,8 @@ T_sampling_period = 1 / F_radar_sampling_freq
 Beta_slope = B_freq_range / T_chirp_duration
 t = np.linspace(0, T_chirp_duration, Number_of_samples, endpoint=True)
 
+max_range = 100  #! arbitrary, in m
+
 # Transmitted signal
 Tx = np.exp(1j * np.pi * Beta_slope * (t**2))
 
@@ -40,7 +42,7 @@ Tx = np.exp(1j * np.pi * Beta_slope * (t**2))
 Rx = np.copy(Tx)  # no noise
 
 # Additive white Gaussian noise (AWGN)
-#noise_power = np.mean(np.abs(Tx) ** 2) / SNR_lin  #! SNR value computed or arbitrary ?
+# noise_power = np.mean(np.abs(Tx) ** 2) / SNR_lin  #! SNR value computed or arbitrary ?
 AGWN = np.random.normal(0, 1, Number_of_samples) + 1j * np.random.normal(
     0, 1, Number_of_samples
 )  # complex noise, both real and imaginary parts are independant and are white noise
@@ -50,12 +52,20 @@ Rx_noise = Rx + AGWN  # received signal with noise
 #! TODO: compute the SNR: power of the complex signal divided by the power of the complex noise ?
 SNR = np.abs(Rx) / np.abs(AGWN)  #! Rx or Tx ?
 
-SNR_dB = 10  #! arbitrary (dB) TODO: compute it instead
-SNR_lib = 10 ** (SNR_dB / 10)  # (linear)
+#SNR_dB = 10  #! arbitrary (dB) TODO: compute it instead
+#SNR_lib = 10 ** (SNR_dB / 10)  # (linear)
 
 # compute signal power: modulus squared (square of the amplitude), then mean? Module au carré = puissance
 # because signal is ergodic, we can compute the mean over time instead of the ensemble mean
-signal_power = np.mean(np.abs(Rx) ** 2)  #! Rx or Tx ?
+rx_power = np.mean(np.abs(Rx) ** 2)  #! Rx or Tx ?
+rx_power_dB = 10 * np.log10(rx_power)
+print("Signal power: "+str(rx_power)+" ("+str(rx_power_dB)+" dB)")
+
+rx_noise_power = np.mean(np.abs(Rx_noise) ** 2)
+rx_noise_power_dB = 10 * np.log10(rx_noise_power)
+print("Noisy signal power: "+str(rx_noise_power)+" ("+str(rx_noise_power_dB)+" dB)")
+
+#power_ratio = rx_power / rx_noise_power
 
 # white gaussian noise: mean = 0, variance = 1, power = variance = 1 or 2 ??
 
@@ -68,7 +78,7 @@ plt.xlabel("Time (s)")
 plt.ylabel("Amplitude")
 plt.legend()
 
-# ------------ cannot see the no-noise signal on this plot, maybe seperate graphs?
+# maybe seperate graphs? :
 plt.subplot(2, 1, 2)
 plt.plot(t, Rx_noise.real, label="Rx Real with noise")
 plt.plot(t, Rx.real, label="Rx Real")
@@ -78,29 +88,50 @@ plt.ylabel("Amplitude")
 plt.legend()
 
 plt.tight_layout()
-plt.show() #! TODO: REMOVE COMMENT
+plt.show()
 
 
 # Generate the Range Doppler Map (RDM)
 
 Nr = 512  #! number of range cells / OR number of samples on each chirp ?
 Nd = 256  # number of doppler cells / number of chirps in one sequence
-t_rdm = np.linspace(0, Nr*Nd, Nd*T_chirp_duration, endpoint=True) #? correct ? needed ?
+#t_rdm = np.linspace(0, Nr * Nd, int(Nd * T_chirp_duration), endpoint=True)  # ? correct ? int() ? needed ?
 
-range_profile = sft.fft(Rx_noise, Nr)
+doppler_frequencies = np.fft.fftshift(np.fft.fftfreq(Nd, 1 / F_radar_sampling_freq))
+range_values = np.linspace(0, max_range, Nr)
 
-doppler_profile = sft.fftshift(sft.fft(range_profile, Nd))  # ,axes=0 or nothing ?
+rdm = np.zeros((Nr, Nd), dtype=complex)
+doppler_profile = np.zeros((Nr, Nd), dtype=complex)
 
-range_bins = np.arange(Nr) * (F_radar_sampling_freq / (2 * Nr))
-doppler_bins = np.fft.fftshift(np.fft.fftfreq(Nd, T_sampling_period))
+for i, r in enumerate(range_values):
+    # Additive white Gaussian noise (AWGN)
+    # noise_power = np.mean(np.abs(Tx) ** 2) / SNR_lin  #! SNR value computed or arbitrary ?
+    AGWN = np.random.normal(0, 1, Number_of_samples) + 1j * np.random.normal(
+        0, 1, Number_of_samples
+    )  # complex noise, both real and imaginary parts are independant and are white noise
+    #! noise takes SNR in input ? -> through noise_power ?
+    Rx_noise = Rx + AGWN  # received signal with noise
+    range_profile = sft.fft(Rx_noise, Nr)
+    doppler_profile = sft.fftshift(sft.fft(range_profile, Nd))  # ,axes=0 or nothing ?
+    rdm[i, :] = doppler_profile
+
+# range_bins = np.arange(Nr) * (F_radar_sampling_freq / (2 * Nr))
+# doppler_bins = np.fft.fftshift(np.fft.fftfreq(Nd, T_sampling_period))
 
 # plot the RDM
 
+# plt.figure(figsize=(10, 6))
+# D, R = np.meshgrid(doppler_bins, range_bins)
+# plt.pcolormesh(D, R, np.abs(doppler_profile), cmap="jet")
+# plt.show()
 
 plt.figure(figsize=(10, 6))
-#! NOT WORKING, TODO: FIX ?
+# plt.imshow(np.abs(doppler_profile.reshape(1, -1)), extent=[-Nd / 2, Nd / 2, 0, Nr], cmap="jet", aspect="auto")  # , vmin=0, vmax=1) #? vmin and vmax ?
 plt.imshow(
-    np.abs(doppler_profile), extent=[-Nd / 2, Nd / 2, 0, Nr], cmap="jet", aspect="auto"
+    np.abs(rdm),
+    extent=[doppler_frequencies[0], doppler_frequencies[-1], 0, max_range],
+    cmap="jet",
+    aspect="auto",
 )  # , vmin=0, vmax=1) #? vmin and vmax ?
 
 # doppler_bins = np.fft.fftshift(np.fft.fftfreq(Nd, T_sampling_period))
@@ -111,23 +142,30 @@ plt.imshow(
 plt.title("Range Doppler Map")
 plt.xlabel("Doppler (Hz)")
 plt.ylabel("Range (m)")
-plt.colorbar(label="Amplitude")  # TODO: remove comment when img plot fixed
+plt.colorbar(label="Amplitude")  #? what is Amplitude ? should we put it in dB ?
 # plt.tight_layout()
 plt.show()
 
 # False alarm probability
 
 # we vary the threshold values
-# threshold = 0.5 #! arbitrary value
-threshold_values = np.linspace(0, 2, 100)  #! arbitrary values
+max_threshold = 2000  #! arbitrary value
+threshold_values = np.linspace(0, max_threshold, 100)  #! arbitrary values
 
-# P_false_alarm = 0 # false alarm probability
-P_false_alarm = np.zeros(len(threshold_values))  # false alarms probability
+def false_alarm_probability(threshold_values):
+    # P_false_alarm = 0 # false alarm probability
+    P_false_alarm = np.zeros(len(threshold_values))  # false alarms probability
 
-# for TODO: loop
+    for i, threshold in enumerate(threshold_values):
+        false_alarm = np.sum(np.abs(doppler_profile) > threshold)
+        P_false_alarm[i] = false_alarm / len(doppler_profile)
+
+    return P_false_alarm
+
+P_false_alarm = false_alarm_probability(threshold_values)
 
 plt.figure(figsize=(8, 6))
-plt.plot(threshold_values, P_false_alarm)
+plt.plot(threshold_values, P_false_alarm) #? plot with threshold in dB ?
 plt.title("False alarm probability")
 plt.xlabel("Threshold")
 plt.ylabel("Probability")
@@ -137,14 +175,35 @@ plt.show()
 
 # Mis-detection probability
 
-SNR_values = np.linspace(0, 20, 100)  #! arbitrary values
+SNR_values = np.linspace(0, 10, 100)  #! arbitrary values TODO: use real values
+#SNR_values = np.arange(0, 20, 2) # ?
 
-# P_mis_detection = 0 # mis-detection probability
-# P_mis_detection = np.zeros(len(threshold_values)) # mis-detections probability
-P_mis_detection = np.zeros(len(SNR_values))  # mis-detections probability
+def mis_detection_probability(SNR_values):
+    # P_mis_detection = 0 # mis-detection probability
+    # P_mis_detection = np.zeros(len(threshold_values)) # mis-detections probability
+    P_mis_detection = np.zeros(len(SNR_values))  # mis-detections probability
 
-# for TODO: loop
+    mis_detection_threshold = 1200  #? = threshold_values[-1]
 
+    for i, SNR in enumerate(SNR_values):
+        # Additive white Gaussian noise (AWGN)
+        # noise_power = np.mean(np.abs(Tx) ** 2) / SNR_lin  #! SNR value computed or arbitrary ?
+        AGWN = np.random.normal(
+            0, np.sqrt(1 / 10 ** (SNR / 10)), Number_of_samples
+        ) + 1j * np.random.normal(
+            0, np.sqrt(1 / 10 ** (SNR / 10)), Number_of_samples
+        )  # complex noise, both real and imaginary parts are independant and are white noise
+        #! noise takes SNR in input ? -> through noise_power ?
+        Rx_noise = Rx + AGWN  # received signal with noise
+        range_profile = sft.fft(Rx_noise, Nr)
+        doppler_profile = sft.fftshift(sft.fft(range_profile, Nd))  # ,axes=0 or nothing ?
+
+        mis_detection = np.sum(np.abs(doppler_profile) < mis_detection_threshold)
+
+        P_mis_detection[i] = mis_detection / len(doppler_profile)
+    return P_mis_detection
+
+P_mis_detection = mis_detection_probability(SNR_values)
 
 plt.figure(figsize=(8, 6))
 plt.plot(SNR_values, P_mis_detection)
@@ -156,12 +215,13 @@ plt.grid(True)
 plt.show()
 
 
-
 # Receiver operating characteristic curve (ROC) for different values of the SNR (or threshold?)
 #! for different values of the SNR
 
 plt.figure(figsize=(8, 8))
 plt.plot(P_false_alarm, P_mis_detection, label="ROC curve")
+#for SNR in SNR_values:
+#    plt.plot(false_alarm_probability(SNR), mis_detection_probability(SNR), label="ROC curve - SNR: "+str(SNR))
 plt.title("Receiver Operating Characteristic Curve")
 plt.xlabel("Probability of false alarm")
 plt.ylabel("Probability of mis-detection")

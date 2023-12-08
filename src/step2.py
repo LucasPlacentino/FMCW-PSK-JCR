@@ -96,19 +96,62 @@ sampled_signal = mixed_signal[
 ]  #! ???
 
 # S/P conversion
-sp_conversion = sampled_signal.reshape((N_samples_per_chirp, -1))
+#sp_conversion = sampled_signal.reshape((N_samples_per_chirp, -1))
 
 # Fast time FFT
-fast_time_fft = sft.fft(sp_conversion, axis=0)
+#fast_time_fft = sft.fft(sp_conversion, axis=0)
 
 # Slow time FFT
-slow_time_fft = sft.fft(fast_time_fft, axis=1)
+#slow_time_fft = sft.fft(fast_time_fft, axis=1)
 
 # --- 3. --- RDM obtained at the output of the 2 dimensional FFT for multiple randomly generated scenarios. Identify the correct targets positions on the RDM.
 
-#! TODO:
+#! TODO: should use the FFTs above (---2---)
 # generate multiple random scenarios
+targets = [(11, 3), (20, 5), (3, 0.4), (34, -2), (25, 0)]
+rx_multiple_targets = sum(
+    target_contribution(range, speed) for range, speed in targets
+)
+Rx = rx_multiple_targets
 
+Nr = 512  #! number of range cells / OR number of samples on each chirp ?
+Nd = 256  # number of doppler cells / number of chirps in one sequence
+# t_rdm = np.linspace(0, Nr * Nd, int(Nd * T_chirp_duration), endpoint=True)  # ? correct ? int() ? needed ?
+
+doppler_frequencies = np.fft.fftshift(np.fft.fftfreq(Nd, 1 / F_radar_sampling_freq))
+range_values = np.linspace(0, max_range, Nr)
+
+rdm = np.zeros((Nr, Nd), dtype=complex)
+doppler_profile = np.zeros((Nr, Nd), dtype=complex)
+
+for i, r in enumerate(range_values):
+    # Additive white Gaussian noise (AWGN)
+    # noise_power = np.mean(np.abs(Tx) ** 2) / SNR_lin  #! SNR value computed or arbitrary ?
+    AGWN = np.random.normal(0, 1, Number_of_samples) + 1j * np.random.normal(
+        0, 1, Number_of_samples
+    )  # complex noise, both real and imaginary parts are independant and are white noise
+    #! noise takes SNR in input ? -> through noise_power ?
+    Rx_noise = Rx + AGWN  # received signal with noise
+    range_profile = sft.fft(Rx_noise, Nr)
+    doppler_profile = sft.fftshift(sft.fft(range_profile, Nd))  # ,axes=0 or nothing ?
+    rdm[i, :] = doppler_profile
+
+# plot the RDM
+plt.figure(figsize=(10, 6))
+# plt.imshow(np.abs(doppler_profile.reshape(1, -1)), extent=[-Nd / 2, Nd / 2, 0, Nr], cmap="jet", aspect="auto")  # , vmin=0, vmax=1) #? vmin and vmax ?
+plt.imshow(
+    np.abs(rdm),
+    extent=[doppler_frequencies[0], doppler_frequencies[-1], 0, max_range],
+    cmap="jet",
+    aspect="auto",
+)  # , vmin=0, vmax=1) #? vmin and vmax ?
+
+plt.title("Range Doppler Map")
+plt.xlabel("Doppler (Hz)")
+plt.ylabel("Range (m)")
+plt.colorbar(label="Amplitude")  # ? what is Amplitude ? should we put it in dB ?
+# plt.tight_layout()
+plt.show()
 
 
 # --- 4. --- Compute the range and Doppler resolutions and discuss the relevance of the radar parameters for the considered scenario.
