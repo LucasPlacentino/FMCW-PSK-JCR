@@ -103,12 +103,12 @@ sampled_signal = mixed_signal[
 
 # --- 3. --- RDM obtained at the output of the 2 dimensional FFT for multiple randomly generated scenarios. Identify the correct targets positions on the RDM.
 
-#! TODO: should use the FFTs above (---2---)
+#! TODO: should use the FFTs above (---2---) ?
 # generate multiple random scenarios
 Rx = signal_multiple_targets
 
-Nr = 512  #! number of range cells / OR number of samples on each chirp ?
-Nd = 256  # number of doppler cells / number of chirps in one sequence
+Nr = N_fast_time_fft_size # 512  #! number of range cells / OR number of samples on each chirp ?
+Nd = K_slow_time_fft_size # 256  # number of doppler cells / number of chirps in one sequence
 # t_rdm = np.linspace(0, Nr * Nd, int(Nd * T_chirp_duration), endpoint=True)  # ? correct ? int() ? needed ?
 
 doppler_frequencies = np.fft.fftshift(np.fft.fftfreq(Nd, 1 / F_radar_sampling_freq))

@@ -146,6 +146,8 @@ plt.colorbar(label="Amplitude")  #? what is Amplitude ? should we put it in dB ?
 # plt.tight_layout()
 plt.show()
 
+#! TODO: compare the RDM obtained with and without noise
+
 # False alarm probability
 
 # we vary the threshold values
