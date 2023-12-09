@@ -118,14 +118,15 @@ rdm = np.zeros((Nr, Nd), dtype=complex)
 doppler_profile = np.zeros((Nr, Nd), dtype=complex)
 
 for i, r in enumerate(range_values):
-    # Additive white Gaussian noise (AWGN)
-    # noise_power = np.mean(np.abs(Tx) ** 2) / SNR_lin  #! SNR value computed or arbitrary ?
-    AGWN = np.random.normal(0, 1, Number_of_samples) + 1j * np.random.normal(
-        0, 1, Number_of_samples
-    )  # complex noise, both real and imaginary parts are independant and are white noise
-    #! noise takes SNR in input ? -> through noise_power ?
-    Rx_noise = Rx + AGWN  # received signal with noise
-    range_profile = sft.fft(Rx_noise, Nr)
+    ## Additive white Gaussian noise (AWGN)
+    ## noise_power = np.mean(np.abs(Tx) ** 2) / SNR_lin  #! SNR value computed or arbitrary ?
+    #AGWN = np.random.normal(0, 1, Number_of_samples) + 1j * np.random.normal(
+    #    0, 1, Number_of_samples
+    #)  # complex noise, both real and imaginary parts are independant and are white noise
+    ##! noise takes SNR in input ? -> through noise_power ?
+    #Rx_noise = Rx + AGWN  # received signal with noise
+    #range_profile = sft.fft(Rx_noise, Nr)
+    range_profile = sft.fft(Rx, Nr)
     doppler_profile = sft.fftshift(sft.fft(range_profile, Nd))  # ,axes=0 or nothing ?
     rdm[i, :] = doppler_profile
 
