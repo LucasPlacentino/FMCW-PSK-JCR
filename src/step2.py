@@ -85,30 +85,42 @@ signal_multiple_targets = sum(
 # --- 2. --- Implement the radar processing: mixing with the transmitted signal, sampling at F_s, S/P conversion,FFT over the fast and slow time dimensions
 
 # mixing with the transmitted signal
-mixed_signal = signal_multiple_targets * FMCW_over_K_chirps  # ? np.conj() needed?
+mixed_signal_multiple_targets = (
+    signal_multiple_targets * FMCW_over_K_chirps
+)  # ? np.conj() needed?
+mixed_signal_single_target = target_signal * FMCW_over_K_chirps  # ? np.conj() needed?
 
 # sampling at F_s
-sampled_signal = mixed_signal[
+sampled_signal_mt = mixed_signal_multiple_targets[
     :: int(F_radar_sampling_freq * T_chirp_duration / N_samples_per_chirp)
-]  #! TODO: ayo what is this sh*t ???
+]  #! TODO: ayo what is this sh*t ??? # multiple targets
+sampled_signal_st = mixed_signal_single_target[
+    :: int(F_radar_sampling_freq * T_chirp_duration / N_samples_per_chirp)
+]  #! TODO: ayo what is this sh*t ??? # single target
+
 
 # S/P conversion
-# sp_conversion = sampled_signal.reshape((N_samples_per_chirp, -1))
+# sp_conversion_mt = sampled_signal_mt.reshape((N_samples_per_chirp, -1)) # multiple targets
+# sp_conversion_st = sampled_signal_st.reshape((N_samples_per_chirp, -1)) # single target
 
 # Fast time FFT
-# fast_time_fft = sft.fft(sp_conversion, axis=0)
+# fast_time_fft_mt = sft.fft(sp_conversion_mt, axis=0) # multiple targets
+# fast_time_fft_st = sft.fft(sp_conversion_st, axis=0) # single target
 
 # Slow time FFT
-# slow_time_fft = sft.fft(fast_time_fft, axis=1)
+# slow_time_fft_mt = sft.fft(fast_time_fft_mt, axis=1) # multiple targets
+# slow_time_fft_st = sft.fft(fast_time_fft_st, axis=1) # single target
 
 # --- 3. --- RDM obtained at the output of the 2 dimensional FFT for multiple randomly generated scenarios. Identify the correct targets positions on the RDM.
 
-#! TODO: should use the FFTs above (---2---) ?
-# generate multiple random scenarios
-Rx = signal_multiple_targets
+#! TODO: should use the FFTs above (---2---)
 
-Nr = N_fast_time_fft_size # 512  #! number of range cells / OR number of samples on each chirp ?
-Nd = K_slow_time_fft_size # 256  # number of doppler cells / number of chirps in one sequence
+
+# generate multiple random scenarios
+Rx = mixed_signal_multiple_targets  #! TODO: use sampled_signal_mt instead ?
+
+Nr = N_fast_time_fft_size  # 512  #! number of range cells / OR number of samples on each chirp ?
+Nd = K_slow_time_fft_size  # 256  # number of doppler cells / number of chirps in one sequence
 # t_rdm = np.linspace(0, Nr * Nd, int(Nd * T_chirp_duration), endpoint=True)  # ? correct ? int() ? needed ?
 
 doppler_frequencies = np.fft.fftshift(np.fft.fftfreq(Nd, 1 / F_radar_sampling_freq))
@@ -119,13 +131,14 @@ doppler_profile = np.zeros((Nr, Nd), dtype=complex)
 
 for i, r in enumerate(range_values):
     ## Additive white Gaussian noise (AWGN)
-    ## noise_power = np.mean(np.abs(Tx) ** 2) / SNR_lin  #! SNR value computed or arbitrary ?
-    #AGWN = np.random.normal(0, 1, Number_of_samples) + 1j * np.random.normal(
+    ## noise_power = np.mean(np.abs(Tx) ** 2) / SNR_lin  # SNR value computed or arbitrary ?
+    # AGWN = np.random.normal(0, 1, Number_of_samples) + 1j * np.random.normal(
     #    0, 1, Number_of_samples
-    #)  # complex noise, both real and imaginary parts are independant and are white noise
-    ##! noise takes SNR in input ? -> through noise_power ?
-    #Rx_noise = Rx + AGWN  # received signal with noise
-    #range_profile = sft.fft(Rx_noise, Nr)
+    # )  # complex noise, both real and imaginary parts are independant and are white noise
+    ## noise takes SNR in input ? -> through noise_power ?
+    # Rx_noise = Rx + AGWN  # received signal with noise
+    # range_profile = sft.fft(Rx_noise, Nr)
+
     range_profile = sft.fft(Rx, Nr)
     doppler_profile = sft.fftshift(sft.fft(range_profile, Nd))  # ,axes=0 or nothing ?
     rdm[i, :] = doppler_profile
@@ -157,9 +170,15 @@ print("Range resolution: ", range_estimation_resolution)
 print("Doppler resolution: ", doppler_freq_estimation_resolution)
 
 print("--- Relevance of radar parameters for the considered scenario: ---")
-print("The frequency range B is the bandwidth of the transmitted signal. It directly determines the range resolution, inversely-proportional. For our case, it is set to 200 MHz.")
-print("The chirp duration T_chirp_duration is the time duration of a chirp. It directly determines the Doppler frequency resolution, inversely-proportional. For our case, it is set between 0.1 and 0.4 ms.")
-print("The number of chirps K_slow_time_fft_size is the number of chirps in a sequence. It directly determines the Doppler frequency resolution, inversely-proportional. For our case, it is set to 256.")
+print(
+    "The frequency range B is the bandwidth of the transmitted signal. It directly determines the range resolution, inversely-proportional. For our case, it is set to 200 MHz."
+)
+print(
+    "The chirp duration T_chirp_duration is the time duration of a chirp. It directly determines the Doppler frequency resolution, inversely-proportional. For our case, it is set between 0.1 and 0.4 ms."
+)
+print(
+    "The number of chirps K_slow_time_fft_size is the number of chirps in a sequence. It directly determines the Doppler frequency resolution, inversely-proportional. For our case, it is set to 256."
+)
 
 
 def plot():
@@ -190,7 +209,7 @@ def plot():
 
     #! done somewhat ? TODO: RDM obtained at the output of the 2 dimensional FFT for multiple randomly generated scenarios. Identify the correc targets positions on the RDM.
 
-    #* DONE Compute the range and Doppler resolutions and discuss the relevance of the radar parameters for the considered scenario.
+    # * DONE Compute the range and Doppler resolutions and discuss the relevance of the radar parameters for the considered scenario.
 
 
 if __name__ == "__main__":
