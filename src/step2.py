@@ -84,6 +84,10 @@ signal_multiple_targets = sum(
 
 # --- 2. --- Implement the radar processing: mixing with the transmitted signal, sampling at F_s, S/P conversion,FFT over the fast and slow time dimensions
 
+# TODO: put in this function to reuse in step 3 ?
+def radar_processing(signal):
+    pass
+
 # mixing with the transmitted signal
 mixed_signal_multiple_targets = (
     signal_multiple_targets * FMCW_over_K_chirps
