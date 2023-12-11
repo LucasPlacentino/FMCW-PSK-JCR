@@ -104,8 +104,6 @@ sampled_signal_st = mixed_signal_single_target[
 
 
 # S/P conversion
-sp_conversion_mt = sampled_signal_mt.reshape((N_samples_per_chirp, -1)) # multiple targets
-sp_conversion_st = sampled_signal_st.reshape((N_samples_per_chirp, -1)) # single target
 
 # Fast time FFT
 # fast_time_fft_mt = sft.fft(sp_conversion_mt, axis=0) # multiple targets
@@ -170,8 +168,6 @@ plt.show()
 range_estimation_resolution = c / (2 * B_freq_range)
 doppler_freq_estimation_resolution = 1 / (K_slow_time_fft_size * T_chirp_duration)
 
-print("Range resolution: ", range_estimation_resolution)
-print("Doppler resolution: ", doppler_freq_estimation_resolution)
 
 print("--- Relevance of radar parameters for the considered scenario: ---")
 print(
