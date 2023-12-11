@@ -100,6 +100,7 @@ Nd = 256  # number of doppler cells / number of chirps in one sequence
 doppler_frequencies = np.fft.fftshift(np.fft.fftfreq(Nd, 1 / F_radar_sampling_freq))
 range_values = np.linspace(0, max_range, Nr)
 
+# ------------------ do not do this, use above --------------------------------------
 rdm = np.zeros((Nr, Nd), dtype=complex)
 doppler_profile = np.zeros((Nr, Nd), dtype=complex)
 
@@ -114,6 +115,8 @@ for i, r in enumerate(range_values):
     range_profile = sft.fft(Rx_noise, Nr)
     doppler_profile = sft.fftshift(sft.fft(range_profile, Nd))  # ,axes=0 or nothing ?
     rdm[i, :] = doppler_profile
+
+# ----------------------------------------------------------------------------------
 
 # range_bins = np.arange(Nr) * (F_radar_sampling_freq / (2 * Nr))
 # doppler_bins = np.fft.fftshift(np.fft.fftfreq(Nd, T_sampling_period))
@@ -151,8 +154,8 @@ plt.show()
 # False alarm probability
 
 # we vary the threshold values
-max_threshold = 2000  #! arbitrary value
-threshold_values = np.linspace(0, max_threshold, 100)  #! arbitrary values
+max_threshold = 2000  #! arbitrary value: yes see rfom RDM
+threshold_values = np.linspace(0, max_threshold, 100)  #! arbitrary values: yes see from RDM
 
 def false_alarm_probability(threshold_values):
     # P_false_alarm = 0 # false alarm probability
@@ -177,7 +180,7 @@ plt.show()
 
 # Mis-detection probability
 
-SNR_values = np.linspace(0, 10, 100)  #! arbitrary values TODO: use real values
+SNR_values = np.linspace(0, 10, 100)  #! arbitrary values, yea, 
 #SNR_values = np.arange(0, 20, 2) # ?
 
 def mis_detection_probability(SNR_values):
