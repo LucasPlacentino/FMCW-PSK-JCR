@@ -83,8 +83,10 @@ def main():
     plt.show()
 
     # Bandwidth calculation
-    Bandwidth = 2 * B_freq_range + 2 * (1 / T_chirp_duration) #! correct ????
+    Bandwidth = 2 * B_freq_range + 2 * (1 / T_chirp_duration) #! correct ?????????????????????????????????????
     print(f"Bandwidth of the signal: {Bandwidth} Hz")
+
+    # TODO: in report, discuss effect of chirp duration on bandwidth: the more T, the more we have to sweep the frequency (so the more bandwidth we need?)
 
     ## pas besoin!
     ## Bandwidth as a function of chirp duration
