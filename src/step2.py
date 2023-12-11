@@ -104,8 +104,8 @@ sampled_signal_st = mixed_signal_single_target[
 
 
 # S/P conversion
-# sp_conversion_mt = sampled_signal_mt.reshape((N_samples_per_chirp, -1)) # multiple targets
-# sp_conversion_st = sampled_signal_st.reshape((N_samples_per_chirp, -1)) # single target
+sp_conversion_mt = sampled_signal_mt.reshape((N_samples_per_chirp, -1)) # multiple targets
+sp_conversion_st = sampled_signal_st.reshape((N_samples_per_chirp, -1)) # single target
 
 # Fast time FFT
 # fast_time_fft_mt = sft.fft(sp_conversion_mt, axis=0) # multiple targets
