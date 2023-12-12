@@ -84,9 +84,11 @@ signal_multiple_targets = sum(
 
 # --- 2. --- Implement the radar processing: mixing with the transmitted signal, sampling at F_s, S/P conversion,FFT over the fast and slow time dimensions
 
+
 # TODO: put in this function to reuse in step 3 ?
 def radar_processing(signal):
     pass
+
 
 # mixing with the transmitted signal
 mixed_signal_multiple_targets = (
@@ -96,14 +98,18 @@ mixed_signal_single_target = target_signal * FMCW_over_K_chirps  # ? np.conj() n
 
 # sampling at F_s
 sampled_signal_mt = mixed_signal_multiple_targets[
-    :: int(F_radar_sampling_freq * T_chirp_duration / N_samples_per_chirp)
-]  #! TODO: ayo what is this sh*t ??? # multiple targets
+    :: int(
+        F_radar_sampling_freq * T_chirp_duration / N_samples_per_chirp
+    )  # this is step size, between each sample
+]  #! TODO: is this sampling correct ?
 sampled_signal_st = mixed_signal_single_target[
     :: int(F_radar_sampling_freq * T_chirp_duration / N_samples_per_chirp)
-]  #! TODO: ayo what is this sh*t ??? # single target
+]  #! TODO: is this sampling correct ? # single target
 
 
 # S/P conversion
+# sp_conversion_mt = sampled_signal_mt.reshape((N_samples_per_chirp, -1)) # multiple targets
+# sp_conversion_st = sampled_signal_st.reshape((N_samples_per_chirp, -1)) # single target
 
 # Fast time FFT
 # fast_time_fft_mt = sft.fft(sp_conversion_mt, axis=0) # multiple targets
@@ -168,6 +174,8 @@ plt.show()
 range_estimation_resolution = c / (2 * B_freq_range)
 doppler_freq_estimation_resolution = 1 / (K_slow_time_fft_size * T_chirp_duration)
 
+print("Range resolution: ", range_estimation_resolution, " m?")
+print("Doppler resolution: ", doppler_freq_estimation_resolution, " Hz?")
 
 print("--- Relevance of radar parameters for the considered scenario: ---")
 print(
@@ -207,7 +215,7 @@ def plot():
 
     #! S/P does,'t work ? TODO: Implement the radar processing: mixing with the transmitted signal, sampling at F_s, S/P conversion,FFT over the fast and slow time dimensions
 
-    #! done somewhat ? TODO: RDM obtained at the output of the 2 dimensional FFT for multiple randomly generated scenarios. Identify the correc targets positions on the RDM.
+    #! fix with above TODO: RDM obtained at the output of the 2 dimensional FFT for multiple randomly generated scenarios. Identify the correc targets positions on the RDM.
 
     # * DONE Compute the range and Doppler resolutions and discuss the relevance of the radar parameters for the considered scenario.
 
