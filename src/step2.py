@@ -34,7 +34,9 @@ max_range = 100  #! arbitrary, in m
 
 # --- 1. --- Generate the FMCW signal composed of K chirps
 single_chirp = step1.signal_baseband  # used with step1.t
-FMCW_over_K_chirps = K_slow_time_fft_size * single_chirp
+# FMCW_over_K_chirps = K_slow_time_fft_size * single_chirp
+FMCW_over_K_chirps = np.tile(single_chirp, K_slow_time_fft_size)
+print("FMCW_over_K_chirps: ", FMCW_over_K_chirps)
 
 ## Fourier Transform
 # fft_fmcw_signal = sft.fft(FMCW_over_K_chirps)
@@ -45,7 +47,8 @@ FMCW_over_K_chirps = K_slow_time_fft_size * single_chirp
 c = 3e8  # speed of light
 tau_max = (2 * max_range) / c  # maximum possible delay
 T_r = T_chirp_duration - tau_max  # duration
-N_samples_per_chirp = int(T_r * F_radar_sampling_freq)
+# N_samples_per_chirp = int(T_r * F_radar_sampling_freq) # ?
+N_samples_per_chip = Number_of_samples/K_slow_time_fft_size
 # K chirps are observed:
 # samples can be organised in a N x K matrix
 
@@ -61,13 +64,14 @@ speed_estimation_resolution = (1 / (K_slow_time_fft_size * T_chirp_duration)) * 
 
 # N-FFT and K-FFT can be combined into a single 2D FFT of the N x K matrix of samples => Range Doppler Map (RDM)
 
-
-def target_contribution(target_range, target_velocity):
+# TODO: input FMWC_over_K_chirps signal
+def target_contribution(target_range, target_velocity, signal):
     delay = (2 * target_range) / c
     freq_shift = 2 * target_velocity * f_c / c
     received_signal = np.exp(1j * 2 * np.pi * freq_shift * t) * np.exp(
         1j * 2 * np.pi * Beta_slope * (t - delay) ** 2
     )
+
     return received_signal
 
 
