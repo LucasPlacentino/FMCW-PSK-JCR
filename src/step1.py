@@ -1,7 +1,7 @@
 """
 ELEC-H311 - Joint Communications and Radar simulation project
 Lucas Placentino
-Salman Houdaibi
+Salman Houdaibis
 """
 
 import numpy as np
