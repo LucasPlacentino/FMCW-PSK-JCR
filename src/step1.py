@@ -1,7 +1,7 @@
 """
 ELEC-H311 - Joint Communications and Radar simulation project
-Plucacentino
-Sabreman
+Lucas Placentino
+Salman Houdaibi
 """
 
 import numpy as np
@@ -49,6 +49,7 @@ fft_freq = sft.fftfreq(Number_of_samples, d=1 / F_sampling_freq)
 fft_shifted = sft.fftshift(fft_signal)
 fft_freq_shifted = sft.fftshift(fft_freq)
 
+
 def main():
     # Plotting
     plt.figure(figsize=(12, 10))
@@ -74,6 +75,7 @@ def main():
     # FFT plot
     plt.subplot(3, 1, 3)
     plt.plot(fft_freq_shifted, np.abs(fft_shifted))
+    # plt.plot(fft_freq_shifted,20 * np.log10(np.abs(fft_shifted) / np.max(np.abs(fft_shifted))))
     plt.grid()
     plt.title("Fourier Transform of Baseband Signal")
     plt.xlabel("Frequency (Hz)")
@@ -83,22 +85,25 @@ def main():
     plt.show()
 
     # Bandwidth calculation
-    Bandwidth = 2 * B_freq_range + 2 * (1 / T_chirp_duration) #! correct ?????????????????????????????????????
+    Bandwidth = 2 * B_freq_range + 2 * (
+        1 / T_chirp_duration
+    )  #! correct ?????????????????????????????????????
     print(f"Bandwidth of the signal: {Bandwidth} Hz")
 
     # TODO: in report, discuss effect of chirp duration on bandwidth: the more T, the more we have to sweep the frequency (so the more bandwidth we need?)
 
     ## pas besoin!
     ## Bandwidth as a function of chirp duration
-    #chirp_durations = np.linspace(1e-4, 4e-4, 100, endpoint=True)
-    #bandwidths = 2 * B_freq_range + 2 * (1 / chirp_durations) # Carlson's Rule #! PAS BON should be the inverse, bandwith increases with chirp duration
-    #plt.figure()
-    #plt.plot(chirp_durations, bandwidths)
-    #plt.grid()
-    #plt.title("Bandwidth depending on the chirp duration (between 0.1ms and 0.4ms)")
-    #plt.xlabel("Chirp duration (s)")
-    #plt.ylabel("Bandwidth (Hz)")
-    #plt.show()
+    # chirp_durations = np.linspace(1e-4, 4e-4, 100, endpoint=True)
+    # bandwidths = 2 * B_freq_range + 2 * (1 / chirp_durations) # Carlson's Rule #! PAS BON should be the inverse, bandwith increases with chirp duration
+    # plt.figure()
+    # plt.plot(chirp_durations, bandwidths)
+    # plt.grid()
+    # plt.title("Bandwidth depending on the chirp duration (between 0.1ms and 0.4ms)")
+    # plt.xlabel("Chirp duration (s)")
+    # plt.ylabel("Bandwidth (Hz)")
+    # plt.show()
+
 
 if __name__ == "__main__":
     main()

@@ -78,20 +78,21 @@ def main():
     plt.ylabel("Magnitude (dB)")
     plt.show()
 
-    # Bandwidth calculation
+    # Bandwidth calculation #! correct?
     Bandwidth = 2 * B_freq_range + 2 * (1 / T_chirp_duration)
-    print(f"Bandwidth of the signal: {Bandwidth} Hz")
+    print("Bandwidth of the signal: "+Bandwidth+" Hz")
 
-    # Bandwidth as a function of chirp duration
-    chirp_durations = np.linspace(1e-4, 4e-4, 100, endpoint=True)
-    bandwidths = 2 * B_freq_range + 2 * (1 / chirp_durations)
-    plt.figure(figsize=(12, 4))
-    plt.plot(chirp_durations, bandwidths)
-    plt.grid()
-    plt.title("Bandwidth depending on the chirp duration (between 0.1ms and 0.4ms)")
-    plt.xlabel("Chirp duration (s)")
-    plt.ylabel("Bandwidth (Hz)")
-    plt.show()
+    ##! not correct? AND NOT NECESSARY
+    ## Bandwidth as a function of chirp duration
+    #chirp_durations = np.linspace(1e-4, 4e-4, 100, endpoint=True)
+    #bandwidths = 2 * B_freq_range + 2 * (1 / chirp_durations)
+    #plt.figure(figsize=(12, 4))
+    #plt.plot(chirp_durations, bandwidths)
+    #plt.grid()
+    #plt.title("Bandwidth depending on the chirp duration (between 0.1ms and 0.4ms)")
+    #plt.xlabel("Chirp duration (s)")
+    #plt.ylabel("Bandwidth (Hz)")
+    #plt.show()
 
 if __name__ == "__main__":
     main()

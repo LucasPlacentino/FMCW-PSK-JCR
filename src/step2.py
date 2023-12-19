@@ -50,7 +50,11 @@ c = 3e8  # speed of light
 tau_max = (2 * max_range) / c  # maximum possible delay
 T_r = T_chirp_duration - tau_max  # duration
 # N_samples_per_chirp = int(T_r * F_radar_sampling_freq) # ?
-N_samples_per_chirp = Number_of_samples // K_slow_time_fft_size  # int division
+N_samples_per_chirp = (
+    F_radar_sampling_freq * T_r
+)  # should be this one, see document #? useful?
+print("N_samples_per_chirp: ", N_samples_per_chirp, "sould be 512")
+# N_samples_per_chirp = Number_of_samples // K_slow_time_fft_size  # int division # shouldn't be this one
 # K chirps are observed:
 # samples can be organised in a N x K matrix
 
@@ -139,36 +143,50 @@ def radar_processing(signal):
 # )  # ? np.conj() needed?
 mixed_signal_st = signal_st * FMCW_over_K_chirps  # ? np.conj() needed?
 
-# sampling at F_s:
-sampling_rate = F_radar_sampling_freq * T_chirp_duration / N_samples_per_chirp
-sampling_interval = int(round(1 / sampling_rate))
+# sampling :
+
+# sampling_rate = F_radar_sampling_freq * T_chirp_duration / N_samples_per_chirp
+# sampling_interval = int(round(1 / sampling_rate))
+
+# sampling_interval = len(single_chirp_signal) / N_samples_per_chirp# should ne this one
+# sampling_interval = T_chirp_duration / N_samples_per_chirp
+
 # sampled_signal_mt = mixed_signal_mt[
 #    :: int(
 #        F_radar_sampling_freq * T_chirp_duration / N_samples_per_chirp
 #    )  # this is step size, between each sample
 # ]  #! TODO: is this sampling correct ?
 # Ensure that the indices are within the signal length
-end_index_st = min(len(mixed_signal_st), len(mixed_signal_st) - 1)
+# end_index_st = min(len(mixed_signal_st), len(mixed_signal_st) - 1)
 # sampled_signal_st = mixed_signal_st[
 #    :: (F_radar_sampling_freq * T_chirp_duration / N_samples_per_chirp)
 # ]  #! TODO: is this sampling correct ? # single target
-sampled_signal_st = mixed_signal_st[::sampling_interval][: end_index_st + 1]
+
+# samples mixed_signal_st with N_samples_per_chirp samples per chirp:
+total_samples_over_K_chirps = N_fast_time_fft_size * K_slow_time_fft_size
+sampling_interval = len(mixed_signal_st) / total_samples_over_K_chirps
+sampled_signal_st = mixed_signal_st[:: int(sampling_interval)]  # Sample the signal
+
+# sampled_signal_st = mixed_signal_st[::sampling_interval]#[: end_index_st + 1]
 print("sampled_signal_st: ", sampled_signal_st)
 
 # S/P conversion
 # sp_conversion_mt = sampled_signal_mt.reshape((N_samples_per_chirp, -1)) # multiple targets
 # sp_conversion_st = sampled_signal_st.reshape((N_samples_per_chirp, -1))  # single target
-sp_conversion_st = sampled_signal_st.reshape(
-    (len(sampled_signal_st), -1)
-)  # single target
+# sp_conversion_st = sampled_signal_st.reshape(
+#    (len(sampled_signal_st), -1)
+# )  # single target
+# Serial to Parallel conversion, each column is a chirp, and each row of a chirp is a sample:
+#sp_conversion_st = sampled_signal_st.reshape((N_samples_per_chirp, -1))  # single target
+sp_conversion_st = sampled_signal_st.reshape((N_fast_time_fft_size, -1))  # single target
 
 # Fast time FFT
 # fast_time_fft_mt = sft.fft(sp_conversion_mt, axis=0) # multiple targets
-fast_time_fft_st = sft.fft(sp_conversion_st, axis=0)  # single target
+fast_time_fft_st = sft.fft(sp_conversion_st, axis=1)  # single target
 
 # Slow time FFT
 # slow_time_fft_mt = sft.fft(fast_time_fft_mt, axis=1) # multiple targets
-slow_time_fft_st = sft.fft(fast_time_fft_st, axis=1)  # single target
+slow_time_fft_st = sft.fft(fast_time_fft_st, axis=0)  # single target
 
 # --- 3. --- RDM obtained at the output of the 2 dimensional FFT for multiple randomly generated scenarios. Identify the correct targets positions on the RDM.
 
@@ -191,11 +209,8 @@ def to_physical_units(start, index, resolution):
 #    np.arange(K_slow_time_fft_size),
 #    doppler_freq_estimation_resolution,
 # )
-
-# in dB:
-slow_time_fft_st_db = np.log10(
-    np.abs(slow_time_fft_st) + 1e-12
-)  # + 1e-12 to avoid log(0) #? 20 * np.log(...) ?
+## in dB:
+#slow_time_fft_st_db = 20 * np.log10(np.abs(slow_time_fft_st) + 1e-12) / np.max(np.abs(slow_time_fft_st)) # + 1e-12 to avoid log(0) #? 20 * np.log(...) ?
 
 plt.figure(figsize=(10, 6))
 plt.imshow(
@@ -209,6 +224,7 @@ plt.title("Range-Doppler Map (RDM)")
 plt.xlabel("Doppler Bins")
 plt.ylabel("Range Bins")
 plt.colorbar(label="Amplitude")
+#plt.colorbar(label="Amplitude (dB)")
 plt.show()
 #! TODO: put range and doppler axes in meters and Hz ?
 
