@@ -19,8 +19,8 @@ slope = B / T_chirp
 chirp = np.exp(1j * 2 * np.pi * (fc * t + (slope / 2) * t**2))
 
 # Simulate target echo
-target_range = 150  # Target range in meters (example value)
-target_velocity = -20  # Target velocity in m/s (negative for approaching target)
+target_range = 10  # Target range in meters (example value) max is 20m
+target_velocity = -1  # Target velocity in m/s (negative for approaching target) max is +- 2m/s
 
 # Calculate the time delay and Doppler shift for the target
 tau = 2 * target_range / c
