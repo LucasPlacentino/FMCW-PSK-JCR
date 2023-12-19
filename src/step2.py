@@ -37,9 +37,14 @@ c = 3e8  # m/s, speed of light
 max_range = 20  # m, given
 max_speed = 2  # m/s, given
 tau_max = (2 * max_range) / c  # maximum possible delay
-# number_of_targets = 5  # arbitrary # could be asked for input
-number_of_targets = int(input("Enter number of targets (int), e.i 5 : "))
+number_of_targets = 5  # arbitrary # could be asked for input
+#number_of_targets = int(input("Enter number of targets (int), e.i 5 : "))
 
+
+radar_max_range = (c * F_radar_sampling_freq) / (
+    2 * Beta_slope
+)  # ? according to https://wirelesspi.com/fmcw-radar-part-3-design-guidelines/
+print("radar theoretical maximum range ? : ", radar_max_range, "m")
 
 # --- 1. --- Generate the FMCW signal composed of K chirps
 
@@ -71,15 +76,13 @@ print("N_samples_per_chirp: ", N_samples_per_chirp, "sould be 512?")
 # K chirps are observed:
 # samples can be organised in a N x K matrix
 
-# maximum_estimated_range = (F_radar_sampling_freq * T_chirp_duration * c / (2 * B_freq_range))
-maximum_estimated_range = f_c * T_chirp_duration * c / (2 * B_freq_range)
-print("maximum_estimated_range: ", maximum_estimated_range)
-beat_freq_estimation = F_radar_sampling_freq / N_fast_time_fft_size  # = 1/T_r
-print("beat_freq_estimation: ", beat_freq_estimation)
-speed_estimation_resolution = (1 / (K_slow_time_fft_size * T_chirp_duration)) * (
-    c / (2 * f_c)
-)
-print("speed_estimation_resolution: ", speed_estimation_resolution)
+##maximum_estimated_range = (F_radar_sampling_freq * T_chirp_duration * c / (2 * B_freq_range))
+#maximum_estimated_range = f_c * T_chirp_duration * c / (2 * B_freq_range)
+#print("maximum_estimated_range: ", maximum_estimated_range)
+#beat_freq_estimation = F_radar_sampling_freq / N_fast_time_fft_size  # = 1/T_r
+#print("beat_freq_estimation: ", beat_freq_estimation)
+#speed_estimation_resolution = (1 / (K_slow_time_fft_size * T_chirp_duration)) * (c / (2 * f_c))
+#print("speed_estimation_resolution: ", speed_estimation_resolution)
 
 # The DFT over the chirp time index k (slow time) results in a Dirac pulse at the Dopppler frequency.
 
@@ -92,8 +95,8 @@ target_velocities = (
     np.random.rand(number_of_targets) * max_speed
 )  # random speed for each target
 for i in range(number_of_targets):
-    print("Target", i + 1, "delay:", target_delays[i], "s", end=", ")
-    print("velocity:", target_velocities[i], "m/s")
+    print("Target", i + 1, "- delay:", "{:.2f}".format(target_delays[i]*1e9), "ns", end=", ")
+    print("velocity:", "{:.2f}".format(target_velocities[i]), "m/s")
 R_0 = c * target_delays / 2  # initial range
 
 target_beat_frequency = 1  # TODO: ?
@@ -460,11 +463,11 @@ def plot():
     # plt.tight_layout()
     plt.show()
 
-    #! done ? TODO: Simulate the impact of the single-target channel on the FMCW signal (the extension to a multi-target channel is obviously the sum of the target contributions)
+    #! naaaaaah ? TODO: Simulate the impact of the single-target channel on the FMCW signal (the extension to a multi-target channel is obviously the sum of the target contributions)
 
-    #! S/P does,'t work ? TODO: Implement the radar processing: mixing with the transmitted signal, sampling at F_s, S/P conversion,FFT over the fast and slow time dimensions
+    #! should work ? TODO: Implement the radar processing: mixing with the transmitted signal, sampling at F_s, S/P conversion,FFT over the fast and slow time dimensions
 
-    #! fix with above TODO: RDM obtained at the output of the 2 dimensional FFT for multiple randomly generated scenarios. Identify the correc targets positions on the RDM.
+    #! should work TODO: RDM obtained at the output of the 2 dimensional FFT for multiple randomly generated scenarios. Identify the correct targets positions on the RDM.
 
     # * DONE Compute the range and Doppler resolutions and discuss the relevance of the radar parameters for the considered scenario.
 
