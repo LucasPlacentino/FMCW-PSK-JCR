@@ -14,6 +14,7 @@ import step1
     Step 2: PSK Modulation of FMCW Signal
 """
 
+"why?"
 # test:
 a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
 b = np.reshape(a, (2, 6))
@@ -21,6 +22,7 @@ c = np.transpose(b)
 print(a)
 print(b)
 print(c)
+
 
 # Parameters
 T_chirp_duration = 2e-4  # seconds, chirp duration
