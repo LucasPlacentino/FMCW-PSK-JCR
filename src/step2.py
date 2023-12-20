@@ -333,11 +333,11 @@ total_number_of_samples = (T_chirp_duration*K_slow_time_fft_size) * 1/F_radar_sa
 #sampling_interval = len(mixed_signal_st) / total_samples_over_K_chirps
 #sampled_signal_st = mixed_signal_st[:: int(sampling_interval)]  # Sample the signal
 #sampled_signal = mixed_signal[:: int(N_samples_per_chirp)]  # Sample the signal
-# Calculate the sampling interval
-sampling_interval = int(len(signal_target) / total_number_of_samples)
-# Sample the signal
-sampled_signal = signal_target[::sampling_interval]
 
+# Calculate the sampling interval
+#sampling_interval = int(len(signal_target) / total_number_of_samples)
+#sampled_signal = signal_target[::sampling_interval]
+sampled_signal = signal_target #* signal is already sampled from the target_contribution function
 
 # sampled_signal_st = mixed_signal_st[::sampling_interval]#[: end_index_st + 1]
 #print("sampled_signal_st: ", sampled_signal_st, "length: ", len(sampled_signal_st))
