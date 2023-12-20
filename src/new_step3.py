@@ -276,7 +276,7 @@ def plot():
     # plt.xlabel("Frequency (Hz)")
     # plt.ylabel("Magnitude")
     # plt.tight_layout()
-    # plt.show()
+    plt.show()
 
     #! done ? TODO: Simulate the impact of the single-target channel on the FMCW signal (the extension to a multi-target channel is obviously the sum of the target contributions)
 
