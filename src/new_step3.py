@@ -168,8 +168,8 @@ print("signal_target shape",signal_target.shape)
 
 
 # ---- add AWGN ----
-SNR = int(input("SNR (dB) : ")) # dB
-noise_power = 10**(SNR/10) #! /20 ?
+SNR = int(input("SNR (negative dB) : ")) # dB
+noise_power = 10**(-SNR/20) #! /10 ? /20 ?
 #noise = np.random.normal(0, noise_power, signal_target.shape)
 AWGN = np.random.normal(0, noise_power, len(signal_target)) + 1j * np.random.normal(0, 1, len(signal_target)) # complex noise, both real and imaginary parts are independant and are white noise
 print("noise shape",AWGN.shape)
