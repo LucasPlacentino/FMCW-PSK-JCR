@@ -229,6 +229,9 @@ doppler_bins = to_physical_units(
 # slow_time_fft_st_db = 20 * np.log10(np.abs(slow_time_fft_st) + 1e-12) / np.max(np.abs(slow_time_fft_st)) # + 1e-12 to avoid log(0) #? 20 * np.log(...) ?
 # slow_time_fft_db = 20 * np.log10(np.abs(slow_time_fft) + 1e-12) / np.max(np.abs(slow_time_fft)) # + 1e-12 to avoid log(0) #? 20* ?
 
+
+#! transpose RDM for ease of reading: TODO: ?
+#slow_time_fft = np.transpose(slow_time_fft)
 plt.figure(figsize=(10, 6))
 plt.imshow(
     #np.abs(slow_time_fft_st),
@@ -240,6 +243,8 @@ plt.imshow(
     # extent=[-2, 2, 0, max_range],
     #extent=[0, K_slow_time_fft_size, N_fast_time_fft_size, 0],
     extent=[doppler_bins[0], doppler_bins[-1], range_bins[-1], range_bins[0]],
+    # transposed extent:
+    #extent=[doppler_bins[-1], doppler_bins[0], range_bins[0], range_bins[-1]],
 )
 plt.title("Range-Doppler Map (RDM)")
 plt.xlabel("Doppler Bins")
@@ -271,13 +276,13 @@ def plot():
     # plt.xlabel("Frequency (Hz)")
     # plt.ylabel("Magnitude")
     # plt.tight_layout()
-    plt.show()
+    # plt.show()
 
-    #! naaaaaah ? TODO: Simulate the impact of the single-target channel on the FMCW signal (the extension to a multi-target channel is obviously the sum of the target contributions)
+    #! done ? TODO: Simulate the impact of the single-target channel on the FMCW signal (the extension to a multi-target channel is obviously the sum of the target contributions)
 
     #! should work ? TODO: Implement the radar processing: mixing with the transmitted signal, sampling at F_s, S/P conversion,FFT over the fast and slow time dimensions
 
-    #! should work TODO: RDM obtained at the output of the 2 dimensional FFT for multiple randomly generated scenarios. Identify the correct targets positions on the RDM.
+    #! weird TODO: RDM obtained at the output of the 2 dimensional FFT for multiple randomly generated scenarios. Identify the correct targets positions on the RDM.
 
     # * DONE Compute the range and Doppler resolutions and discuss the relevance of the radar parameters for the considered scenario.
 
