@@ -230,21 +230,28 @@ doppler_bins = to_physical_units(
 # slow_time_fft_db = 20 * np.log10(np.abs(slow_time_fft) + 1e-12) / np.max(np.abs(slow_time_fft)) # + 1e-12 to avoid log(0) #? 20* ?
 
 
-#! transpose RDM for ease of reading: TODO: ?
+#! flip up-down RDM for ease of reading range: TODO: ?
 #slow_time_fft = np.transpose(slow_time_fft)
+slow_time_fft = np.flipud(slow_time_fft)
+#! flip left-right RDM to have negative speeds on the left ? TODO: ?
+slow_time_fft = np.fliplr(slow_time_fft)
+
 plt.figure(figsize=(10, 6))
 plt.imshow(
     #np.abs(slow_time_fft_st),
     np.abs(slow_time_fft),
-    # slow_time_fft_st_db,
+    # slow_time_fft_st_db, # TODO: ? in dB
     aspect="auto",
     cmap="jet",
-    # extent=[0, slow_time_fft_st.shape[1], 0, slow_time_fft_st.shape[0]],
-    # extent=[-2, 2, 0, max_range],
+    # normal extent:
+    ## extent=[0, slow_time_fft_st.shape[1], 0, slow_time_fft_st.shape[0]],
+    ## extent=[-2, 2, 0, max_range],
     #extent=[0, K_slow_time_fft_size, N_fast_time_fft_size, 0],
-    extent=[doppler_bins[0], doppler_bins[-1], range_bins[-1], range_bins[0]],
-    # transposed extent:
-    #extent=[doppler_bins[-1], doppler_bins[0], range_bins[0], range_bins[-1]],
+    #extent=[doppler_bins[0], doppler_bins[-1], range_bins[-1], range_bins[0]],
+
+    # flipped extent:
+    # extent=[doppler_bins[-1], doppler_bins[0], range_bins[0], range_bins[-1]], #flipud
+    extent=[doppler_bins[0], doppler_bins[-1], range_bins[0], range_bins[-1]], #flipud and fliplr
 )
 plt.title("Range-Doppler Map (RDM)")
 plt.xlabel("Doppler Bins")
