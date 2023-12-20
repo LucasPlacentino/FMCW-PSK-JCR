@@ -109,7 +109,7 @@ target_delays = (
     np.random.rand(number_of_targets) * tau_max
 )  # random delay for each target
 target_velocities = (
-    np.random.rand(number_of_targets) * max_speed
+    np.random.uniform(-max_speed, max_speed, number_of_targets)
 )  # random speed for each target
 for i in range(number_of_targets):
     print(
@@ -238,8 +238,8 @@ plt.imshow(
     cmap="jet",
     # extent=[0, slow_time_fft_st.shape[1], 0, slow_time_fft_st.shape[0]],
     # extent=[-2, 2, 0, max_range],
-    extent=[0, K_slow_time_fft_size, N_fast_time_fft_size, 0],
-    # extent=[doppler_bins[0], doppler_bins[-1], range_bins[-1], range_bins[0]],
+    #extent=[0, K_slow_time_fft_size, N_fast_time_fft_size, 0],
+    extent=[doppler_bins[0], doppler_bins[-1], range_bins[-1], range_bins[0]],
 )
 plt.title("Range-Doppler Map (RDM)")
 plt.xlabel("Doppler Bins")
