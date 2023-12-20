@@ -22,32 +22,37 @@ import scipy.fft as sft
     - Draw the ROC curves for different values of the SNR
     - Discuss the choice of the SNR values
 """
+import step1
 
 T_chirp_duration = 2e-4  # 0.1 to 0.4 ms
-Number_of_samples = 2**18
+#Number_of_samples = 2**18
 B_freq_range = 200e6  # 200 MHz
 f_c = 24e9  # carrier freq, 24 GHz
 F_sim_sampling_freq = 512e6  # simulation, 512 MHz
 F_radar_sampling_freq = 2e6  # receiver sampling freq, 2 MHz
 T_sampling_period = 1 / F_radar_sampling_freq
+K_number_of_chirps = 256 # number of chirps
+N_number_of_samples_per_chirp = 512 # number of samples per chirp
 Beta_slope = B_freq_range / T_chirp_duration
-t = np.linspace(0, T_chirp_duration, Number_of_samples, endpoint=True)
+t = np.linspace(0, T_chirp_duration*K_number_of_chirps, N_number_of_samples_per_chirp*K_number_of_chirps, endpoint=True)
 
 max_range = 100  #! arbitrary, in m
 
 # Transmitted signal
-Tx = np.exp(1j * np.pi * Beta_slope * (t**2))
+#Tx = np.tile(np.exp(1j * np.pi * Beta_slope * (t**2)), K_number_of_chirps)
+Tx = np.tile(step1.signal_baseband, K_number_of_chirps)
 
 # Received signal
 Rx = np.copy(Tx)  # no noise
+print("Rx shape:",Rx.shape)
 
 # Additive white Gaussian noise (AWGN)
 # noise_power = np.mean(np.abs(Tx) ** 2) / SNR_lin  #! SNR value computed or arbitrary ?
-AGWN = np.random.normal(0, 1, Number_of_samples) + 1j * np.random.normal(
-    0, 1, Number_of_samples
-)  # complex noise, both real and imaginary parts are independant and are white noise
+AGWN = np.random.normal(0, 1, len(t)) + 1j * np.random.normal(0, 1, len(t)) # complex noise, both real and imaginary parts are independant and are white noise
+print("AGWN shape:",AGWN.shape)
 #! noise takes SNR in input ? -> through noise_power ?
 Rx_noise = Rx + AGWN  # received signal with noise
+print("Rx_noise shape:",Rx_noise.shape)
 
 #! TODO: compute the SNR: power of the complex signal divided by the power of the complex noise ?
 SNR = np.abs(Rx) / np.abs(AGWN)  #! Rx or Tx ?
@@ -70,24 +75,26 @@ print("Noisy signal power: "+str(rx_noise_power)+" ("+str(rx_noise_power_dB)+" d
 # white gaussian noise: mean = 0, variance = 1, power = variance = 1 or 2 ??
 
 
-plt.figure(figsize=(12, 6))
-plt.subplot(2, 1, 1)
-plt.plot(t, Tx.real, label="Tx Real")
-plt.title("Transmitted signal")
+plt.figure(figsize=(10, 4))
+plt.plot(t, Rx_noise.real, label="Rx Real")
+plt.plot(t, Rx.real, label="Rx Real")
+plt.xlim(0, t[-1])
+plt.title("Rx Real with and without noise (no target)")
 plt.xlabel("Time (s)")
 plt.ylabel("Amplitude")
 plt.legend()
+plt.show()
 
 # maybe seperate graphs? :
-plt.subplot(2, 1, 2)
-plt.plot(t, Rx_noise.real, label="Rx Real with noise")
-plt.plot(t, Rx.real, label="Rx Real")
+plt.figure(figsize=(10, 4))
+plt.plot(t, Rx_noise.real, label="Rx Real with noise (no target)")
+plt.plot(t, Rx.real, label="Rx Real (no target)")
+plt.xlim(0, t[-1]/20)
 plt.title("Received signal with and without noise")
 plt.xlabel("Time (s)")
 plt.ylabel("Amplitude")
 plt.legend()
-
-plt.tight_layout()
+#plt.tight_layout()
 plt.show()
 
 
@@ -101,21 +108,21 @@ doppler_frequencies = np.fft.fftshift(np.fft.fftfreq(Nd, 1 / F_radar_sampling_fr
 range_values = np.linspace(0, max_range, Nr)
 
 # ------------------ do not do this, use above --------------------------------------
-rdm = np.zeros((Nr, Nd), dtype=complex)
-doppler_profile = np.zeros((Nr, Nd), dtype=complex)
-
-for i, r in enumerate(range_values):
-    # Additive white Gaussian noise (AWGN)
-    # noise_power = np.mean(np.abs(Tx) ** 2) / SNR_lin  #! SNR value computed or arbitrary ?
-    AGWN = np.random.normal(0, 1, Number_of_samples) + 1j * np.random.normal(
-        0, 1, Number_of_samples
-    )  # complex noise, both real and imaginary parts are independant and are white noise
-    #! noise takes SNR in input ? -> through noise_power ?
-    Rx_noise = Rx + AGWN  # received signal with noise
-    range_profile = sft.fft(Rx_noise, Nr)
-    doppler_profile = sft.fftshift(sft.fft(range_profile, Nd))  # ,axes=0 or nothing ?
-    rdm[i, :] = doppler_profile
-
+#rdm = np.zeros((Nr, Nd), dtype=complex)
+#doppler_profile = np.zeros((Nr, Nd), dtype=complex)
+#
+#for i, r in enumerate(range_values):
+#    # Additive white Gaussian noise (AWGN)
+#    # noise_power = np.mean(np.abs(Tx) ** 2) / SNR_lin  #! SNR value computed or arbitrary ?
+#    AGWN = np.random.normal(0, 1, Number_of_samples) + 1j * np.random.normal(
+#        0, 1, Number_of_samples
+#    )  # complex noise, both real and imaginary parts are independant and are white noise
+#    #! noise takes SNR in input ? -> through noise_power ?
+#    Rx_noise = Rx + AGWN  # received signal with noise
+#    range_profile = sft.fft(Rx_noise, Nr)
+#    doppler_profile = sft.fftshift(sft.fft(range_profile, Nd))  # ,axes=0 or nothing ?
+#    rdm[i, :] = doppler_profile
+#
 # ----------------------------------------------------------------------------------
 
 # range_bins = np.arange(Nr) * (F_radar_sampling_freq / (2 * Nr))

@@ -125,22 +125,25 @@ def target_contribution(target_delay, target_velocity):#(target_range, target_ve
     doppler_freq = 2 * target_velocity * f_c / c
     beat_frequency = 2 * R_0_initial_range * Beta_slope / c
     kappa = np.exp(1j*4*np.pi*R_0_initial_range*f_c/c)*np.exp(1j*(-2)*np.pi* (Beta_slope**2) * (R_0_initial_range**2) / (c**2)) # ? complex factor
-    t_prime = np.arange(0, T_chirp_duration, T_chirp_duration / (N_fast_time_fft_size + guard_samples)) #! "sampled time index t′ (the fast time index)" # or t over 1 chirp ?
-    # ! use guard samples ?
+    t_prime = np.arange(0, T_chirp_duration, T_chirp_duration / (N_fast_time_fft_size + guard_samples)) #! "sampled time index t′ (the fast time index)" #? or t over 1 chirp $t' \in [0,T]$ ?
     print("t_prime shape:",t_prime.shape)
     print(t_prime)
 
     complex_conjugated_video_signal = np.array([], dtype=complex)
     #complex_conjugated_video_signal = np.concatenate([kappa * np.exp(1j * 2 * np.pi * beat_frequency * t_prime[k])*np.exp(1j * 2 * np.pi * doppler_freq * k * T_chirp_duration)] for k in range(K_slow_time_fft_size))
     for k in range(K_slow_time_fft_size):
-        complex_conjugated_video_signal_one_sample = np.array([], dtype=complex)
-        np.concatenate(complex_conjugated_video_signal_one_sample,[kappa * np.exp(1j * 2 * np.pi * beat_frequency * t_prime[n])*np.exp(1j * 2 * np.pi * doppler_freq * k * T_chirp_duration) for n in N_fast_time_fft_size])
-        print("vid signal one sample",k,complex_conjugated_video_signal_one_sample.shape)
         #complex_conjugated_video_signal_one_sample = np.array([], dtype=complex)
-        #for n in range(N_fast_time_fft_size):
-        #    np.concatenate(complex_conjugated_video_signal_one_sample,kappa * np.exp(1j * 2 * np.pi * beat_frequency * t_prime[n])*np.exp(1j * 2 * np.pi * doppler_freq * k * T_chirp_duration))
-        np.concatenate(complex_conjugated_video_signal, complex_conjugated_video_signal_one_sample)
-        print("vid signal",k,complex_conjugated_video_signal.shape)
+        #np.concatenate(complex_conjugated_video_signal_one_sample,[kappa * np.exp(1j * 2 * np.pi * beat_frequency * t_prime[n])*np.exp(1j * 2 * np.pi * doppler_freq * k * T_chirp_duration) for n in N_fast_time_fft_size])
+        
+        complex_conjugated_video_signal_one_sample = np.array([], dtype=complex)
+        for n in range(N_fast_time_fft_size):
+            sample = kappa * np.exp(1j * 2 * np.pi * beat_frequency * t_prime[n]) * np.exp(1j * 2 * np.pi * doppler_freq * k * T_chirp_duration)
+            complex_conjugated_video_signal_one_sample = np.concatenate((complex_conjugated_video_signal_one_sample, [sample]), axis=0)
+            #np.concatenate((complex_conjugated_video_signal_one_sample,[sample]), dtype=complex)
+            #print(complex_conjugated_video_signal_one_sample)
+            #print("vid signal one sample shape",k,complex_conjugated_video_signal_one_sample.shape)
+        complex_conjugated_video_signal = np.concatenate((complex_conjugated_video_signal, complex_conjugated_video_signal_one_sample))
+        print("vid signal shape",k,complex_conjugated_video_signal.shape)
     #target_signal = np.exp(1j * np.pi * Beta_slope * (t_over_k_chirps**2))
     target_signal = complex_conjugated_video_signal
 
@@ -299,9 +302,11 @@ plt.show()
 
 # mixing with the transmitted signal
 # mixed_signal_mt = (
-#    signal_mt * FMCW_over_K_chirps
-# )  # ? np.conj() needed?
-mixed_signal_st = signal_target * FMCW_over_K_chirps  # ? np.conj() needed?
+#    signal_mt * np.conj(FMCW_over_K_chirps)
+# )  # use np.conj()
+#mixed_signal_st = signal_st * np.conj(FMCW_over_K_chirps)  # use np.conj()
+#mixed_signal = signal_target * np.conj(FMCW_over_K_chirps)  # use np.conj()
+#! already mixed in the target_contribution function
 
 # sampling :
 
@@ -323,12 +328,20 @@ mixed_signal_st = signal_target * FMCW_over_K_chirps  # ? np.conj() needed?
 # ]  #! TODO: is this sampling correct ? # single target
 
 # samples mixed_signal_st with N_samples_per_chirp samples per chirp:
-total_samples_over_K_chirps = N_fast_time_fft_size * K_slow_time_fft_size
-sampling_interval = len(mixed_signal_st) / total_samples_over_K_chirps
-sampled_signal_st = mixed_signal_st[:: int(sampling_interval)]  # Sample the signal
+#total_samples_over_K_chirps = N_fast_time_fft_size * K_slow_time_fft_size
+total_number_of_samples = (T_chirp_duration*K_slow_time_fft_size) * 1/F_radar_sampling_freq
+#sampling_interval = len(mixed_signal_st) / total_samples_over_K_chirps
+#sampled_signal_st = mixed_signal_st[:: int(sampling_interval)]  # Sample the signal
+#sampled_signal = mixed_signal[:: int(N_samples_per_chirp)]  # Sample the signal
+# Calculate the sampling interval
+sampling_interval = int(len(signal_target) / total_number_of_samples)
+# Sample the signal
+sampled_signal = signal_target[::sampling_interval]
+
 
 # sampled_signal_st = mixed_signal_st[::sampling_interval]#[: end_index_st + 1]
-print("sampled_signal_st: ", sampled_signal_st, "length: ", len(sampled_signal_st))
+#print("sampled_signal_st: ", sampled_signal_st, "length: ", len(sampled_signal_st))
+print("sampled_signal: ", sampled_signal, "length: ", len(sampled_signal))
 
 # S/P conversion
 # sp_conversion_mt = sampled_signal_mt.reshape((N_samples_per_chirp, -1)) # multiple targets
@@ -338,33 +351,40 @@ print("sampled_signal_st: ", sampled_signal_st, "length: ", len(sampled_signal_s
 # )  # single target
 # Serial to Parallel conversion, each column is a chirp, and each row of a chirp is a sample:
 # sp_conversion_st = sampled_signal_st.reshape((N_samples_per_chirp, -1))  # single target
-sp_conversion_st = np.reshape(
-    sampled_signal_st, (K_slow_time_fft_size, N_fast_time_fft_size)
-)  # single target, width:512 samples per chirp, height:256 chirps, needs to be transposed
-sp_conversion_st = np.transpose(sp_conversion_st)
-# print("height"+str(len(sp_conversion_st)), "width"+str(len(sp_conversion_st[0])))
-print(
-    "sp_conversion_st shape:",
-    sp_conversion_st.shape,
-    "(height, width), or (rows, columns)",
-)
+#sp_conversion_st = np.reshape(
+#    sampled_signal_st, (K_slow_time_fft_size, N_fast_time_fft_size)
+#)  # single target, width:512 samples per chirp, height:256 chirps, needs to be transposed
+#sp_conversion_st = np.transpose(sp_conversion_st)
+## print("height"+str(len(sp_conversion_st)), "width"+str(len(sp_conversion_st[0])))
+#print(
+#    "sp_conversion_st shape:",
+#    sp_conversion_st.shape,
+#    "(height, width), or (rows, columns)",
+#)
+sp_converted_signal = np.reshape(sampled_signal, (K_slow_time_fft_size, N_fast_time_fft_size)) # width: 512, height: 256, needs to be transposed
+sp_converted_signal = np.transpose(sp_converted_signal)
+print("sp_converted_signal shape:",sp_converted_signal.shape,"(height, width), or (rows, columns)")
 
 # Fast time FFT
 # fast_time_fft_mt = sft.fft(sp_conversion_mt, axis=0) # multiple targets
-fast_time_fft_st = np.fft.fft(
-    sp_conversion_st, axis=0
-)  # single target, axis=0 means columns
+#fast_time_fft_st = np.fft.fft(
+#    sp_conversion_st, axis=0
+#)  # single target, axis=0 means columns
 # fast_time_fft_st = sft.fftn(sp_conversion_st, axis=0)  # single target, axis=0 means columns
+fast_time_fft = np.fft.fft(sp_converted_signal, axis=0)  # axis=0 means columns
 
 # Slow time FFT
 # slow_time_fft_mt = sft.fft(fast_time_fft_mt, axis=1) # multiple targets
-slow_time_fft_st = np.fft.fft(
-    fast_time_fft_st, axis=1
-)  # single target, axis=1 means rows
+#slow_time_fft_st = np.fft.fft(
+#    fast_time_fft_st, axis=1
+#)  # single target, axis=1 means rows
 # slow_time_fft_st = sft.fftn(fast_time_fft_st, axis=1) # single target, axis=1 means rows
+slow_time_fft = np.fft.fft(fast_time_fft, axis=1)  # axis=1 means rows
 
 # debug:
-print(slow_time_fft_st.shape)
+#print(slow_time_fft_mt.shape)
+#print(slow_time_fft_st.shape)
+print(slow_time_fft.shape)
 
 # --- 3. --- RDM obtained at the output of the 2 dimensional FFT for multiple randomly generated scenarios. Identify the correct targets positions on the RDM.
 
@@ -389,10 +409,12 @@ doppler_bins = to_physical_units(
 )
 ## in dB:
 # slow_time_fft_st_db = 20 * np.log10(np.abs(slow_time_fft_st) + 1e-12) / np.max(np.abs(slow_time_fft_st)) # + 1e-12 to avoid log(0) #? 20 * np.log(...) ?
+# slow_time_fft_db = 20 * np.log10(np.abs(slow_time_fft) + 1e-12) / np.max(np.abs(slow_time_fft)) # + 1e-12 to avoid log(0) #? 20* ?
 
 plt.figure(figsize=(10, 6))
 plt.imshow(
-    np.abs(slow_time_fft_st),
+    #np.abs(slow_time_fft_st),
+    np.abs(slow_time_fft),
     # slow_time_fft_st_db,
     aspect="auto",
     cmap="jet",
