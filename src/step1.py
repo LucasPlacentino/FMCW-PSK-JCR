@@ -19,6 +19,7 @@ B_freq_range = 200e6  # 200 MHz
 f_c = 24e9  # Carrier frequency 24 GHz
 F_sampling_freq = 512e6  # 512 MHz
 Beta_slope = B_freq_range / T_chirp_duration  # B = Beta*T
+print("Beta_slope:",Beta_slope)
 
 # Time vector
 t = np.linspace(0, T_chirp_duration, Number_of_samples, endpoint=True)
@@ -84,10 +85,10 @@ def main():
     plt.tight_layout()
     plt.show()
 
-    # Bandwidth calculation
-    Bandwidth = 2 * B_freq_range + 2 * (
-        1 / T_chirp_duration
-    )  #! correct ?????????????????????????????????????
+    # Bandwidth calculation:
+    ##Bandwidth = 2 * B_freq_range + 2 * (1 / T_chirp_duration)  # NOT CORRECT
+    # $\Delta f$ = total frequency excusrion ( = B_freq_range), is approached by the bandwidth if Beta_slope is is a large value (which it is here)
+    Bandwidth = 2 * B_freq_range * ( 1 + (1/Beta_slope)) # Carlson's Rule, see course notes
     print(f"Bandwidth of the signal: {Bandwidth} Hz")
 
     # TODO: in report, discuss effect of chirp duration on bandwidth: the more T, the more we have to sweep the frequency (so the more bandwidth we need?)
