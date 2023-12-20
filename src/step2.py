@@ -37,8 +37,8 @@ c = 3e8  # m/s, speed of light
 max_range = 20  # m, given
 max_speed = 2  # m/s, given
 tau_max = (2 * max_range) / c  # maximum possible delay
-number_of_targets = 5  # arbitrary # could be asked for input
-#number_of_targets = int(input("Enter number of targets (int), e.i 5 : "))
+#number_of_targets = 5  # arbitrary # could be asked for input
+number_of_targets = int(input("Enter number of targets (int), e.i 5 : "))
 
 
 radar_max_range = (c * F_radar_sampling_freq) / (

@@ -1,0 +1,4 @@
+{
+    // run this project's script in terminal rather than VS Code's output panel for the built-in code runner, allows for user input
+    "code-runner.runInTerminal": true
+}
