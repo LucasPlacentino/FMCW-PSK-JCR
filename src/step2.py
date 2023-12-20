@@ -77,12 +77,12 @@ print("N_samples_per_chirp: ", N_samples_per_chirp, "sould be 512?")
 # samples can be organised in a N x K matrix
 
 ##maximum_estimated_range = (F_radar_sampling_freq * T_chirp_duration * c / (2 * B_freq_range))
-#maximum_estimated_range = f_c * T_chirp_duration * c / (2 * B_freq_range)
-#print("maximum_estimated_range: ", maximum_estimated_range)
-#beat_freq_estimation = F_radar_sampling_freq / N_fast_time_fft_size  # = 1/T_r
-#print("beat_freq_estimation: ", beat_freq_estimation)
-#speed_estimation_resolution = (1 / (K_slow_time_fft_size * T_chirp_duration)) * (c / (2 * f_c))
-#print("speed_estimation_resolution: ", speed_estimation_resolution)
+# maximum_estimated_range = f_c * T_chirp_duration * c / (2 * B_freq_range)
+# print("maximum_estimated_range: ", maximum_estimated_range)
+# beat_freq_estimation = F_radar_sampling_freq / N_fast_time_fft_size  # = 1/T_r
+# print("beat_freq_estimation: ", beat_freq_estimation)
+# speed_estimation_resolution = (1 / (K_slow_time_fft_size * T_chirp_duration)) * (c / (2 * f_c))
+# print("speed_estimation_resolution: ", speed_estimation_resolution)
 
 # The DFT over the chirp time index k (slow time) results in a Dirac pulse at the Dopppler frequency.
 
@@ -95,9 +95,16 @@ target_velocities = (
     np.random.rand(number_of_targets) * max_speed
 )  # random speed for each target
 for i in range(number_of_targets):
-    print("Target", i + 1, "- delay:", "{:.2f}".format(target_delays[i]*1e9), "ns", end=", ")
+    print(
+        "Target",
+        i + 1,
+        "- delay:",
+        "{:.2f}".format(target_delays[i] * 1e9),
+        "ns",
+        end=", ",
+    )
     print("velocity:", "{:.2f}".format(target_velocities[i]), "m/s")
-R_0 = c * target_delays / 2  # initial range
+#R_0 = c * target_delays / 2  # initial range
 
 target_beat_frequency = 1  # TODO: ?
 # F_doppler_shift = 1 #TODO: ?
@@ -107,9 +114,18 @@ radar_wavelength = c / f_c
 
 
 # ? TODO: input FMWC_over_K_chirps signal?
-def target_contribution(target_range, target_velocity):  # , signal):
-    delay = (2 * target_range) / c
-    freq_shift = 2 * target_velocity * f_c / c
+def target_contribution(target_delay, target_velocity):#(target_range, target_velocity):  # , signal):
+    #delay = (2 * target_range) / c
+    #freq_shift = 2 * target_velocity * f_c / c
+
+    R_0_initial_Range = c * target_delay / 2
+    doppler_freq = 2 * target_velocity * f_c / c
+    beat_frequency = 2 * R_0_initial_Range * Beta_slope / c
+    kappa = 1 # ? complex factor
+    t_prime = 1 #! TODO: ????? "sampled time index t′ (the fast time index)"
+
+    complex_conjugated_video_signal = np.concatenate(kappa * np.exp(1j * 2 * np.pi * beat_frequency * t_prime)*np.exp(1j * 2 * np.pi * doppler_freq * k * T_chirp_duration) for k in range(K_slow_time_fft_size))
+    target_signal = np.exp(1j * np.pi * Beta_slope * (t_over_k_chirps**2))
 
     # target_signal = np.exp(1j * 2 * np.pi * freq_shift * t) * np.exp(1j * 2 * np.pi * Beta_slope * (t - delay) ** 2)
 
@@ -137,14 +153,14 @@ def target_contribution(target_range, target_velocity):  # , signal):
     #        )
     #    )
 
-    target_signal = np.exp(1j * 2 * np.pi * freq_shift * t_over_k_chirps) * np.exp(
-        1j
-        * 2
-        * np.pi
-        * Beta_slope
-        * (t_over_k_chirps - delay) ** 2
-        / (2 * T_chirp_duration)
-    )
+    # target_signal = np.exp(1j * 2 * np.pi * freq_shift * t_over_k_chirps) * np.exp(
+    #     1j
+    #     * 2
+    #     * np.pi
+    #     * Beta_slope
+    #     * (t_over_k_chirps - delay) ** 2
+    #     / (2 * T_chirp_duration)
+    # )
 
     return target_signal
 
