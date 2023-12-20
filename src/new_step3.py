@@ -161,41 +161,6 @@ def target_contribution(target_delay, target_velocity):#(target_range, target_ve
     #target_signal = np.exp(1j * np.pi * Beta_slope * (t_over_k_chirps**2))
     target_signal = complex_conjugated_video_signal
 
-    # target_signal = np.exp(1j * 2 * np.pi * freq_shift * t) * np.exp(1j * 2 * np.pi * Beta_slope * (t - delay) ** 2)
-
-    # target_signal = (
-    #    signal
-    #    * np.exp(1j * 2 * np.pi * freq_shift * t)
-    #    * np.exp(
-    #        1j * 2 * np.pi * B_freq_range * (t - delay) ** 2 / (2 * T_chirp_duration)
-    #    )
-    # )
-
-    ## apply to each chirp:
-    # target_signal = np.zeros_like(signal, dtype=complex)
-    # for k in range(signal.shape[0]):
-    #    target_signal[k, :] = (
-    #        signal[k, :]
-    #        * np.exp(1j * 2 * np.pi * freq_shift * t)
-    #        * np.exp(
-    #            1j
-    #            * 2
-    #            * np.pi
-    #            * B_freq_range
-    #            * (t - delay) ** 2
-    #            / (2 * T_chirp_duration)
-    #        )
-    #    )
-
-    # target_signal = np.exp(1j * 2 * np.pi * freq_shift * t_over_k_chirps) * np.exp(
-    #     1j
-    #     * 2
-    #     * np.pi
-    #     * Beta_slope
-    #     * (t_over_k_chirps - delay) ** 2
-    #     / (2 * T_chirp_duration)
-    # )
-
     return target_signal
 
 signal_target = sum(target_contribution(target_delays[i], target_velocities[i]) for i in range(number_of_targets))
@@ -204,13 +169,13 @@ print("signal_target shape",signal_target.shape)
 
 # ---- add AWGN ----
 SNR = int(input("SNR (dB) : ")) # dB
-noise_power = 10**(-SNR/10)
-noise = np.random.normal(0, noise_power, signal_target.shape)
-AGWN = np.random.normal(0, noise_power, len(signal_target)) + 1j * np.random.normal(0, 1, len(signal_target)) # complex noise, both real and imaginary parts are independant and are white noise
-print("noise shape",noise.shape)
+noise_power = 10**(SNR/10) #! /20 ?
+#noise = np.random.normal(0, noise_power, signal_target.shape)
+AWGN = np.random.normal(0, noise_power, len(signal_target)) + 1j * np.random.normal(0, 1, len(signal_target)) # complex noise, both real and imaginary parts are independant and are white noise
+print("noise shape",AWGN.shape)
 
 # Mix the target_signal with the noise:
-signal_target_noise = signal_target + AGWN
+signal_target_noise = signal_target + AWGN
 
 
 # samples mixed_signal_st with N_samples_per_chirp samples per chirp:
@@ -230,41 +195,14 @@ sampled_signal = signal_target_noise #* signal is already sampled from the targe
 print("sampled_signal: ", sampled_signal, "length: ", len(sampled_signal))
 
 # S/P conversion
-# sp_conversion_mt = sampled_signal_mt.reshape((N_samples_per_chirp, -1)) # multiple targets
-# sp_conversion_st = sampled_signal_st.reshape((N_samples_per_chirp, -1)) # single target
-# sp_conversion_st = sampled_signal_st.reshape(
-#    (len(sampled_signal_st), -1)
-# )  # single target
-# Serial to Parallel conversion, each column is a chirp, and each row of a chirp is a sample:
-# sp_conversion_st = sampled_signal_st.reshape((N_samples_per_chirp, -1))  # single target
-#sp_conversion_st = np.reshape(
-#    sampled_signal_st, (K_slow_time_fft_size, N_fast_time_fft_size)
-#)  # single target, width:512 samples per chirp, height:256 chirps, needs to be transposed
-#sp_conversion_st = np.transpose(sp_conversion_st)
-## print("height"+str(len(sp_conversion_st)), "width"+str(len(sp_conversion_st[0])))
-#print(
-#    "sp_conversion_st shape:",
-#    sp_conversion_st.shape,
-#    "(height, width), or (rows, columns)",
-#)
 sp_converted_signal = np.reshape(sampled_signal, (K_slow_time_fft_size, N_fast_time_fft_size)) # width: 512, height: 256, needs to be transposed
 sp_converted_signal = np.transpose(sp_converted_signal)
 print("sp_converted_signal shape:",sp_converted_signal.shape,"(height, width), or (rows, columns)")
 
 # Fast time FFT
-# fast_time_fft_mt = sft.fft(sp_conversion_mt, axis=0) # multiple targets
-#fast_time_fft_st = np.fft.fft(
-#    sp_conversion_st, axis=0
-#)  # single target, axis=0 means columns
-# fast_time_fft_st = sft.fftn(sp_conversion_st, axis=0)  # single target, axis=0 means columns
 fast_time_fft = np.fft.fft(sp_converted_signal, axis=0)  # axis=0 means columns
 
 # Slow time FFT
-# slow_time_fft_mt = sft.fft(fast_time_fft_mt, axis=1) # multiple targets
-#slow_time_fft_st = np.fft.fft(
-#    fast_time_fft_st, axis=1
-#)  # single target, axis=1 means rows
-# slow_time_fft_st = sft.fftn(fast_time_fft_st, axis=1) # single target, axis=1 means rows
 slow_time_fft = np.fft.fft(fast_time_fft, axis=1)  # axis=1 means rows
 
 # debug:
@@ -272,18 +210,12 @@ slow_time_fft = np.fft.fft(fast_time_fft, axis=1)  # axis=1 means rows
 #print(slow_time_fft_st.shape)
 print(slow_time_fft.shape)
 
-# --- 3. --- RDM obtained at the output of the 2 dimensional FFT for multiple randomly generated scenarios. Identify the correct targets positions on the RDM.
-
-#! TODO: should use the FFTs above (---2---)
-
 range_estimation_resolution = c / (2 * B_freq_range)
 doppler_freq_estimation_resolution = 1 / (K_slow_time_fft_size * T_chirp_duration)
 # ? not above ?
 
-
 def to_physical_units(start, index, resolution):
     return start + index * resolution
-
 
 range_bins = to_physical_units(
     0, np.arange(N_fast_time_fft_size), range_estimation_resolution
