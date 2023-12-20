@@ -39,6 +39,7 @@ max_speed = 2  # m/s, given
 tau_max = (2 * max_range) / c  # maximum possible delay
 #number_of_targets = 5  # arbitrary # could be asked for input
 number_of_targets = int(input("Enter number of targets (int), e.i 5 : "))
+guard_samples = 5 # given
 
 
 radar_max_range = (c * F_radar_sampling_freq) / (
@@ -106,26 +107,40 @@ for i in range(number_of_targets):
     print("velocity:", "{:.2f}".format(target_velocities[i]), "m/s")
 #R_0 = c * target_delays / 2  # initial range
 
-target_beat_frequency = 1  # TODO: ?
-# F_doppler_shift = 1 #TODO: ?
+# target_beat_frequency = 1
+# F_doppler_shift = 1
 radar_wavelength = c / f_c
-# velocity = (F_doppler_shift/2) * (radar_wavelength) #TODO: ?
-# distance = (c*target_beat_frequency) / (2*Beta_slope) #TODO: ?
+# velocity = (F_doppler_shift/2) * (radar_wavelength)
+# distance = (c*target_beat_frequency) / (2*Beta_slope)
 
 
-# ? TODO: input FMWC_over_K_chirps signal?
+# ! FIXME: TODO: ?
 def target_contribution(target_delay, target_velocity):#(target_range, target_velocity):  # , signal):
     #delay = (2 * target_range) / c
     #freq_shift = 2 * target_velocity * f_c / c
 
-    R_0_initial_Range = c * target_delay / 2
+    R_0_initial_range = c * target_delay / 2
     doppler_freq = 2 * target_velocity * f_c / c
-    beat_frequency = 2 * R_0_initial_Range * Beta_slope / c
-    kappa = 1 # ? complex factor
-    t_prime = 1 #! TODO: ????? "sampled time index t′ (the fast time index)"
+    beat_frequency = 2 * R_0_initial_range * Beta_slope / c
+    kappa = np.exp(1j*4*np.pi*R_0_initial_range*f_c/c)*np.exp(1j*(-2)*np.pi* (Beta_slope**2) * (R_0_initial_range**2) / (c**2)) # ? complex factor
+    t_prime = np.arange(0, T_chirp_duration, T_chirp_duration / (N_fast_time_fft_size + guard_samples)) #! "sampled time index t′ (the fast time index)" # or t over 1 chirp ?
+    # ! use guard samples ?
+    print("t_prime shape:",t_prime.shape)
+    print(t_prime)
 
-    complex_conjugated_video_signal = np.concatenate(kappa * np.exp(1j * 2 * np.pi * beat_frequency * t_prime)*np.exp(1j * 2 * np.pi * doppler_freq * k * T_chirp_duration) for k in range(K_slow_time_fft_size))
-    target_signal = np.exp(1j * np.pi * Beta_slope * (t_over_k_chirps**2))
+    complex_conjugated_video_signal = np.array([], dtype=complex)
+    #complex_conjugated_video_signal = np.concatenate([kappa * np.exp(1j * 2 * np.pi * beat_frequency * t_prime[k])*np.exp(1j * 2 * np.pi * doppler_freq * k * T_chirp_duration)] for k in range(K_slow_time_fft_size))
+    for k in range(K_slow_time_fft_size):
+        complex_conjugated_video_signal_one_sample = np.array([], dtype=complex)
+        np.concatenate(complex_conjugated_video_signal_one_sample,[kappa * np.exp(1j * 2 * np.pi * beat_frequency * t_prime[n])*np.exp(1j * 2 * np.pi * doppler_freq * k * T_chirp_duration) for n in N_fast_time_fft_size])
+        print("vid signal one sample",k,complex_conjugated_video_signal_one_sample.shape)
+        #complex_conjugated_video_signal_one_sample = np.array([], dtype=complex)
+        #for n in range(N_fast_time_fft_size):
+        #    np.concatenate(complex_conjugated_video_signal_one_sample,kappa * np.exp(1j * 2 * np.pi * beat_frequency * t_prime[n])*np.exp(1j * 2 * np.pi * doppler_freq * k * T_chirp_duration))
+        np.concatenate(complex_conjugated_video_signal, complex_conjugated_video_signal_one_sample)
+        print("vid signal",k,complex_conjugated_video_signal.shape)
+    #target_signal = np.exp(1j * np.pi * Beta_slope * (t_over_k_chirps**2))
+    target_signal = complex_conjugated_video_signal
 
     # target_signal = np.exp(1j * 2 * np.pi * freq_shift * t) * np.exp(1j * 2 * np.pi * Beta_slope * (t - delay) ** 2)
 
@@ -165,19 +180,21 @@ def target_contribution(target_delay, target_velocity):#(target_range, target_ve
     return target_signal
 
 
-# max range is 20m, max speed is 2m/s
-# single target:
-target_range = 10  #! arbitrary, in m
-target_velocity = 1  #! arbitrary, in m/s
-signal_st = target_contribution(target_range, target_velocity)  # , FMCW_over_K_chirps)
-print("signal_st: ", signal_st)
+## max range is 20m, max speed is 2m/s
+## single target:
+#target_range = 10  #! arbitrary, in m
+#target_velocity = 1  #! arbitrary, in m/s
+#signal_st = target_contribution(target_range, target_velocity)  # , FMCW_over_K_chirps)
+#print("signal_st: ", signal_st)
+#
+## multiple targets:
+#targets = [(11, 1.2), (20, 1), (3, 0.4), (7, -2), (15, 0)]
+## signal_mt = sum(
+##    target_contribution(range, speed, FMCW_over_K_chirps) for range, speed in targets
+## )
 
-# multiple targets:
-targets = [(11, 1.2), (20, 1), (3, 0.4), (7, -2), (15, 0)]
-# signal_mt = sum(
-#    target_contribution(range, speed, FMCW_over_K_chirps) for range, speed in targets
-# )
-
+signal_target = sum(target_contribution(target_delays[i], target_velocities[i]) for i in range(number_of_targets))
+print("signal_target shape",signal_target.shape)
 
 # --- 2. --- Implement the radar processing: mixing with the transmitted signal, sampling at F_s, S/P conversion,FFT over the fast and slow time dimensions
 
@@ -282,7 +299,7 @@ plt.show()
 # mixed_signal_mt = (
 #    signal_mt * FMCW_over_K_chirps
 # )  # ? np.conj() needed?
-mixed_signal_st = signal_st * FMCW_over_K_chirps  # ? np.conj() needed?
+mixed_signal_st = signal_target * FMCW_over_K_chirps  # ? np.conj() needed?
 
 # sampling :
 
