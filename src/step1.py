@@ -11,10 +11,11 @@ import scipy.fft as sft
 """
     Step 1: FMCW signal
 """
+F_simulation_sampling_freq = 512e6  # Hz, for step 2
 
 # Parameters
 T_chirp_duration = 2e-4  # chirp duration: 0.1 ms to 0.4 ms
-Number_of_samples = 2**18  # 2**18 samples
+Number_of_samples = int(F_simulation_sampling_freq * T_chirp_duration)#2**18  # 2**18 samples
 B_freq_range = 200e6  # 200 MHz
 f_c = 24e9  # Carrier frequency 24 GHz
 F_sampling_freq = 512e6  # 512 MHz
@@ -107,4 +108,5 @@ def main():
 
 
 if __name__ == "__main__":
+    Number_of_samples = 2**18  # 2**18 samples
     main()

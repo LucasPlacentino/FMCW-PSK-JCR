@@ -40,7 +40,17 @@ max_range = 100  #! arbitrary, in m
 
 # Transmitted signal
 #Tx = np.tile(np.exp(1j * np.pi * Beta_slope * (t**2)), K_number_of_chirps)
+print("signal_baseband shape:",step1.signal_baseband.shape)
 Tx = np.tile(step1.signal_baseband, K_number_of_chirps)
+print("Tx shape:",Tx.shape)
+plt.figure(figsize=(10, 4))
+plt.plot(t, Tx.real, label="Tx Real")
+plt.xlim(0, t[-1])
+plt.title("Tx (Real)")
+plt.xlabel("Time (s)")
+plt.ylabel("Amplitude")
+plt.legend()
+plt.show()
 
 # Received signal
 Rx = np.copy(Tx)  # no noise

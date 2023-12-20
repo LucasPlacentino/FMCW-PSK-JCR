@@ -140,8 +140,8 @@ def target_contribution(target_delay, target_velocity):#(target_range, target_ve
     beat_frequency = 2 * R_0_initial_range * Beta_slope / c
     kappa = np.exp(1j*4*np.pi*R_0_initial_range*f_c/c)*np.exp(1j*(-2)*np.pi* (Beta_slope**2) * (R_0_initial_range**2) / (c**2)) # ? complex factor
     t_prime = np.arange(0, T_chirp_duration, T_chirp_duration / (N_fast_time_fft_size + guard_samples)) #! "sampled time index t′ (the fast time index)" #? or t over 1 chirp $t' \in [0,T]$ ?
-    print("t_prime shape:",t_prime.shape)
-    print(t_prime)
+    #print("t_prime shape:",t_prime.shape)
+    #print(t_prime)
 
     complex_conjugated_video_signal = np.array([], dtype=complex)
     #complex_conjugated_video_signal = np.concatenate([kappa * np.exp(1j * 2 * np.pi * beat_frequency * t_prime[k])*np.exp(1j * 2 * np.pi * doppler_freq * k * T_chirp_duration)] for k in range(K_slow_time_fft_size))
@@ -157,7 +157,7 @@ def target_contribution(target_delay, target_velocity):#(target_range, target_ve
             #print(complex_conjugated_video_signal_one_sample)
             #print("vid signal one sample shape",k,complex_conjugated_video_signal_one_sample.shape)
         complex_conjugated_video_signal = np.concatenate((complex_conjugated_video_signal, complex_conjugated_video_signal_one_sample))
-        print("vid signal shape",k,complex_conjugated_video_signal.shape)
+        #print("vid signal shape",k,complex_conjugated_video_signal.shape)
     #target_signal = np.exp(1j * np.pi * Beta_slope * (t_over_k_chirps**2))
     target_signal = complex_conjugated_video_signal
 
@@ -198,148 +198,20 @@ def target_contribution(target_delay, target_velocity):#(target_range, target_ve
 
     return target_signal
 
-
-## max range is 20m, max speed is 2m/s
-## single target:
-#target_range = 10  #! arbitrary, in m
-#target_velocity = 1  #! arbitrary, in m/s
-#signal_st = target_contribution(target_range, target_velocity)  # , FMCW_over_K_chirps)
-#print("signal_st: ", signal_st)
-#
-## multiple targets:
-#targets = [(11, 1.2), (20, 1), (3, 0.4), (7, -2), (15, 0)]
-## signal_mt = sum(
-##    target_contribution(range, speed, FMCW_over_K_chirps) for range, speed in targets
-## )
-
 signal_target = sum(target_contribution(target_delays[i], target_velocities[i]) for i in range(number_of_targets))
 print("signal_target shape",signal_target.shape)
 
-# --- 2. --- Implement the radar processing: mixing with the transmitted signal, sampling at F_s, S/P conversion,FFT over the fast and slow time dimensions
 
+# ---- add AWGN ----
+SNR = int(input("SNR (dB) : ")) # dB
+noise_power = 10**(-SNR/10)
+noise = np.random.normal(0, noise_power, signal_target.shape)
+AGWN = np.random.normal(0, noise_power, len(signal_target)) + 1j * np.random.normal(0, 1, len(signal_target)) # complex noise, both real and imaginary parts are independant and are white noise
+print("noise shape",noise.shape)
 
-# TODO: put in this function to reuse in step 3 ?
-def radar_processing(signal):
-    pass
+# Mix the target_signal with the noise:
+signal_target_noise = signal_target + AGWN
 
-
-"""
-# target_reception_times = np.zeros((number_of_targets, K_slow_time_fft_size)) #?
-targets_reception_times_matrices = [
-    np.zeros((K_slow_time_fft_size, N_fast_time_fft_size))
-    for i in range(number_of_targets)
-]  # each target's reception times matrix
-
-emission_time_matrix = np.zeros((K_slow_time_fft_size, N_fast_time_fft_size))  # ?
-phaseshift_at_t_matrix = np.zeros((K_slow_time_fft_size, N_fast_time_fft_size))  # ?
-total_phaseshift_at_t = []
-total_emission_time = []
-total_reception_time = []
-total_reception_time_vector = []
-
-# TODO: optimize this? :
-for i in range(number_of_targets):
-    target_reception_time_matrix = np.zeros(
-        (K_slow_time_fft_size, N_fast_time_fft_size)
-    )  # ?
-    # reception times for each chirp's samples:
-    for j in range(K_slow_time_fft_size):
-        target_reception_time = np.arange(
-            target_delays[i],
-            T_chirp_duration + target_delays[i],
-            T_chirp_duration / N_fast_time_fft_size,
-        )  # ?
-        target_reception_time_matrix[j, :] = target_reception_time[
-            :N_fast_time_fft_size
-        ]  # ?
-    targets_reception_times_matrices[i] = target_reception_time_matrix  # ?
-
-# emission times and instant frequency for each chirp's samples:
-# TODO: ?
-for i in range(K_slow_time_fft_size):
-    emission_time = np.arange(
-        0, T_chirp_duration, T_chirp_duration / N_fast_time_fft_size
-    )  # ?
-    instant_freq_at_t = Beta_slope * emission_time  # ?
-    emission_time_matrix[i, :] = emission_time[:N_fast_time_fft_size]  # ?
-    # phaseshift_at_t = np.pi * instant_freq_at_t[:N_fast_time_fft_size] * emission_time[:N_fast_time_fft_size] # ?
-    phaseshift_at_t_matrix = instant_freq_at_t[:N_fast_time_fft_size]  # ?
-
-# put each chirp's emission times in a single vector:
-for i in range(K_slow_time_fft_size):
-    # instant_freq_at_t = Beta_slope * emission_time_matrix[i, :] # ?
-    instant_freq_at_t = phaseshift_at_t_matrix[i, :]  # ?
-    emission_time = emission_time_matrix[i, :]  # ?
-    total_phaseshift_at_t = np.concatenate(
-        (total_phaseshift_at_t, instant_freq_at_t)
-    )  # ?
-    _time_at_chirp_start = (i - 1) * T_chirp_duration
-    total_emission_time = np.concatenate(
-        (total_emission_time, _time_at_chirp_start + emission_time)
-    )  # ?
-
-# put each target's (and chirp) reception times in a single matrix:
-for i in range(number_of_targets):
-    _reception_time_matrix_current = targets_reception_times_matrices[i]  # ?
-    for j in range(K_slow_time_fft_size):
-        target_reception_time = _reception_time_matrix_current[j, :]  # ?
-        _time_at_chirp_start = (j - 1) * T_chirp_duration
-        total_reception_time_vector = np.concatenate(
-            (total_reception_time, _time_at_chirp_start + target_reception_time)
-        )  # ?
-    total_reception_time[i, :] = total_reception_time_vector  # ?
-    total_reception_time_vector = []  # ?
-
-rdm_single = np.zeros((N_fast_time_fft_size, K_slow_time_fft_size))#, dtype=complex)  # ?
-rdm_multiple = np.zeros((N_fast_time_fft_size, K_slow_time_fft_size))#, dtype=complex) # ?
-
-for target in range(number_of_targets):
-    pass
-
-plt.figure(figsize=(10, 6))
-plt.imshow(
-    np.abs(rdm_multiple),
-    # slow_time_fft_st_db,
-    aspect="auto",
-    cmap="jet",
-    # extent=[0, slow_time_fft_st.shape[1], 0, slow_time_fft_st.shape[0]],
-    extent=[0, K_slow_time_fft_size, 0, N_fast_time_fft_size],
-    # extent=[doppler_bins[0], doppler_bins[-1], range_bins[-1], range_bins[0]],
-)
-plt.title("Range-Doppler Map (RDM)")
-plt.xlabel("Doppler Bins")
-plt.ylabel("Range Bins")
-plt.colorbar(label="Amplitude")
-# plt.colorbar(label="Amplitude (dB)")
-plt.show()
-"""
-
-# mixing with the transmitted signal
-# mixed_signal_mt = (
-#    signal_mt * np.conj(FMCW_over_K_chirps)
-# )  # use np.conj()
-#mixed_signal_st = signal_st * np.conj(FMCW_over_K_chirps)  # use np.conj()
-#mixed_signal = signal_target * np.conj(FMCW_over_K_chirps)  # use np.conj()
-#! already mixed in the target_contribution function
-
-# sampling :
-
-# sampling_rate = F_radar_sampling_freq * T_chirp_duration / N_samples_per_chirp
-# sampling_interval = int(round(1 / sampling_rate))
-
-# sampling_interval = len(single_chirp_signal) / N_samples_per_chirp# should ne this one
-# sampling_interval = T_chirp_duration / N_samples_per_chirp
-
-# sampled_signal_mt = mixed_signal_mt[
-#    :: int(
-#        F_radar_sampling_freq * T_chirp_duration / N_samples_per_chirp
-#    )  # this is step size, between each sample
-# ]  #! TODO: is this sampling correct ?
-# Ensure that the indices are within the signal length
-# end_index_st = min(len(mixed_signal_st), len(mixed_signal_st) - 1)
-# sampled_signal_st = mixed_signal_st[
-#    :: (F_radar_sampling_freq * T_chirp_duration / N_samples_per_chirp)
-# ]  #! TODO: is this sampling correct ? # single target
 
 # samples mixed_signal_st with N_samples_per_chirp samples per chirp:
 #total_samples_over_K_chirps = N_fast_time_fft_size * K_slow_time_fft_size
@@ -351,7 +223,7 @@ total_number_of_samples = (T_chirp_duration*K_slow_time_fft_size) * 1/F_radar_sa
 # Calculate the sampling interval
 #sampling_interval = int(len(signal_target) / total_number_of_samples)
 #sampled_signal = signal_target[::sampling_interval]
-sampled_signal = signal_target #* signal is already sampled from the target_contribution function
+sampled_signal = signal_target_noise #* signal is already sampled from the target_contribution function
 
 # sampled_signal_st = mixed_signal_st[::sampling_interval]#[: end_index_st + 1]
 #print("sampled_signal_st: ", sampled_signal_st, "length: ", len(sampled_signal_st))
@@ -445,72 +317,6 @@ plt.colorbar(label="Amplitude")
 plt.show()
 #! TODO: put range and doppler axes in meters and Hz ?
 
-
-"""
-# generate multiple random scenarios
-# Rx = mixed_signal_multiple_targets  #! TODO: use sampled_signal_mt instead ?
-Rx = sampled_signal_st
-
-Nr = N_fast_time_fft_size  # 512  #! number of range cells / OR number of samples on each chirp ?
-Nd = K_slow_time_fft_size  # 256  # number of doppler cells / number of chirps in one sequence
-# t_rdm = np.linspace(0, Nr * Nd, int(Nd * T_chirp_duration), endpoint=True)  # ? correct ? int() ? needed ?
-
-doppler_frequencies = np.fft.fftshift(np.fft.fftfreq(Nd, 1 / F_radar_sampling_freq))
-range_values = np.linspace(0, max_range, Nr)
-
-rdm = np.zeros((Nr, Nd), dtype=complex)
-doppler_profile = np.zeros((Nr, Nd), dtype=complex)
-
-for i, r in enumerate(range_values):
-    ## Additive white Gaussian noise (AWGN)
-    ## noise_power = np.mean(np.abs(Tx) ** 2) / SNR_lin  # SNR value computed or arbitrary ?
-    # AGWN = np.random.normal(0, 1, Number_of_samples) + 1j * np.random.normal(
-    #    0, 1, Number_of_samples
-    # )  # complex noise, both real and imaginary parts are independant and are white noise
-    ## noise takes SNR in input ? -> through noise_power ?
-    # Rx_noise = Rx + AGWN  # received signal with noise
-    # range_profile = sft.fft(Rx_noise, Nr)
-
-    range_profile = sft.fft(Rx, Nr)
-    doppler_profile = sft.fftshift(sft.fft(range_profile, Nd))  # ,axes=0 or nothing ?
-    rdm[i, :] = doppler_profile
-
-# plot the RDM
-plt.figure(figsize=(10, 6))
-# plt.imshow(np.abs(doppler_profile.reshape(1, -1)), extent=[-Nd / 2, Nd / 2, 0, Nr], cmap="jet", aspect="auto")  # , vmin=0, vmax=1) #? vmin and vmax ?
-plt.imshow(
-    np.abs(rdm),
-    extent=[doppler_frequencies[0], doppler_frequencies[-1], 0, max_range],
-    cmap="jet",
-    aspect="auto",
-)  # , vmin=0, vmax=1) #? vmin and vmax ?
-
-plt.title("Range Doppler Map")
-plt.xlabel("Doppler (Hz)")
-plt.ylabel("Range (m)")
-plt.colorbar(label="Amplitude")  # ? what Amplitude ? should we put it in dB ?
-# plt.tight_layout()
-plt.show()
-"""
-
-
-# --- 4. --- Compute the range and Doppler resolutions and discuss the relevance of the radar parameters for the considered scenario.
-
-# see --- 3. --- for computing resolutions
-
-print("Range resolution: ", range_estimation_resolution, " m?")
-print("Doppler resolution: ", doppler_freq_estimation_resolution, " Hz?")
-
-print("--- Relevance of radar parameters for the considered scenario: ---")
-print(
-    "The frequency range B is the bandwidth of the transmitted signal. It directly determines the range resolution, inversely-proportional. For our case, it is set to 200 MHz."
-)
-print(
-    "The chirp duration T_chirp_duration is the time duration of a chirp. It directly determines the Doppler frequency resolution, inversely-proportional. For our case, it is set between 0.1 and 0.4 ms."
-)
-print(
-    "The number of chirps K_slow_time_fft_size is the number of chirps in a sequence. It directly determines the Doppler frequency resolution, inversely-proportional. For our case, it is set to 256."
-)
 
 
 def plot():
