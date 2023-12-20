@@ -80,7 +80,7 @@ def main():
 
     # Bandwidth calculation #! correct?
     Bandwidth = 2 * B_freq_range + 2 * (1 / T_chirp_duration)
-    print("Bandwidth of the signal: "+Bandwidth+" Hz")
+    print("Bandwidth of the signal:",Bandwidth,"Hz")
 
     ##! not correct? AND NOT NECESSARY
     ## Bandwidth as a function of chirp duration
