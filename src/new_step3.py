@@ -14,14 +14,13 @@ import step1
     Step 2: PSK Modulation of FMCW Signal
 """
 
-"why?"
 # test:
-a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
-b = np.reshape(a, (2, 6))
-c = np.transpose(b)
-print(a)
-print(b)
-print(c)
+#a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
+#b = np.reshape(a, (2, 6))
+#c = np.transpose(b)
+#print(a)
+#print(b)
+#print(c)
 
 
 # Parameters
@@ -33,14 +32,14 @@ F_simulation_sampling_freq = 512e6  # Hz
 F_radar_sampling_freq = 2e6  # Hz
 Beta_slope = B_freq_range / T_chirp_duration
 # t = np.linspace(0, T_chirp_duration, Number_of_samples, endpoint=True)
-N_fast_time_fft_size = 512
-K_slow_time_fft_size = 256
+N_fast_time_fft_size = 24 #512 #24
+K_slow_time_fft_size = 24# 256 #16
 c = 3e8  # m/s, speed of light
 max_range = 20  # m, given
 max_speed = 2  # m/s, given
 tau_max = (2 * max_range) / c  # maximum possible delay
 #number_of_targets = 5  # arbitrary # could be asked for input
-number_of_targets = int(input("Enter number of targets (int), e.i 5 : "))
+number_of_targets = int(input("Enter number of targets (int), i.e 5 : "))
 guard_samples = 5 # given
 kappa = 1 # simplification
 
@@ -106,11 +105,12 @@ print("N_samples_per_chirp: ", N_samples_per_chirp, "sould be 512?")
 
 # N-FFT and K-FFT can be combined into a single 2D FFT of the N x K matrix of samples => Range Doppler Map (RDM)
 
+target_scale = 4
 target_delays = (
-    np.random.rand(number_of_targets) * tau_max
+    np.random.rand(number_of_targets) * tau_max# *target_scale#
 )  # random delay for each target
 target_velocities = (
-    np.random.uniform(-max_speed, max_speed, number_of_targets)
+    np.random.uniform(-max_speed, max_speed, number_of_targets)#*target_scale#
 )  # random speed for each target
 for i in range(number_of_targets):
     print(
@@ -122,7 +122,6 @@ for i in range(number_of_targets):
         end=", ",
     )
     print("velocity:", "{:.2f}".format(target_velocities[i]), "m/s")
-#R_0 = c * target_delays / 2  # initial range
 
 # target_beat_frequency = 1
 # F_doppler_shift = 1
@@ -137,7 +136,8 @@ def target_contribution(target_delay, target_velocity):#(target_range, target_ve
     #freq_shift = 2 * target_velocity * f_c / c
 
     R_0_initial_range = c * target_delay / 2 # from the linear movement simplification
-    doppler_freq = 2 * target_velocity * f_c / c
+    print("R_0_initial_range: ", R_0_initial_range, "m")
+    doppler_freq = 2 * target_velocity * f_c / c * target_scale#
     beat_frequency = 2 * R_0_initial_range * Beta_slope / c
     #kappa = np.exp(1j*4*np.pi*R_0_initial_range*f_c/c)*np.exp(1j*(-2)*np.pi* (Beta_slope**2) * (R_0_initial_range**2) / (c**2)) # ? complex factor
     #kappa = 1 # see constants beginning of file
@@ -193,13 +193,13 @@ total_number_of_samples = (T_chirp_duration*K_slow_time_fft_size) * 1/F_radar_sa
 sampled_signal = signal_target_noise #* signal is already sampled from the target_contribution function
 
 # sampled_signal_st = mixed_signal_st[::sampling_interval]#[: end_index_st + 1]
-#print("sampled_signal_st: ", sampled_signal_st, "length: ", len(sampled_signal_st))
-print("sampled_signal: ", sampled_signal, "length: ", len(sampled_signal))
+##print("sampled_signal_st: ", sampled_signal_st, "length: ", len(sampled_signal_st))
+#print("sampled_signal: ", sampled_signal, "length: ", len(sampled_signal))
 
 # S/P conversion
 sp_converted_signal = np.reshape(sampled_signal, (K_slow_time_fft_size, N_fast_time_fft_size)) # width: 512, height: 256, needs to be transposed
 sp_converted_signal = np.transpose(sp_converted_signal)
-print("sp_converted_signal shape:",sp_converted_signal.shape,"(height, width), or (rows, columns)")
+#print("sp_converted_signal shape:",sp_converted_signal.shape,"(height, width), or (rows, columns)")
 
 # Fast time FFT
 fast_time_fft = np.fft.fft(sp_converted_signal, axis=0)  # axis=0 means columns
@@ -213,7 +213,9 @@ slow_time_fft = np.fft.fft(fast_time_fft, axis=1)  # axis=1 means rows
 print(slow_time_fft.shape)
 
 range_estimation_resolution = c / (2 * B_freq_range)
+print("range_estimation_resolution: ", range_estimation_resolution)
 doppler_freq_estimation_resolution = 1 / (K_slow_time_fft_size * T_chirp_duration)
+print("doppler_freq_estimation_resolution: ", doppler_freq_estimation_resolution)
 # ? not above ?
 
 def to_physical_units(start, index, resolution):
@@ -227,22 +229,27 @@ doppler_bins = to_physical_units(
     np.arange(K_slow_time_fft_size),
     doppler_freq_estimation_resolution,
 )
-## in dB:
-# slow_time_fft_st_db = 20 * np.log10(np.abs(slow_time_fft_st) + 1e-12) / np.max(np.abs(slow_time_fft_st)) # + 1e-12 to avoid log(0) #? 20 * np.log(...) ?
-# slow_time_fft_db = 20 * np.log10(np.abs(slow_time_fft) + 1e-12) / np.max(np.abs(slow_time_fft)) # + 1e-12 to avoid log(0) #? 20* ?
 
-
-#! flip up-down RDM for ease of reading range: TODO: ?
+#! flip up-down RDM for ease of visually reading range: ?
 #slow_time_fft = np.transpose(slow_time_fft)
 slow_time_fft = np.flipud(slow_time_fft)
-#! flip left-right RDM to have negative speeds on the left ? TODO: ?
+#! flip left-right RDM to have negative speeds on the left ?
 slow_time_fft = np.fliplr(slow_time_fft)
+
+## in dB:
+# slow_time_fft_st_db = 20 * np.log10(np.abs(slow_time_fft_st) + 1e-12) / np.max(np.abs(slow_time_fft_st)) # + 1e-12 to avoid log(0) #? 20 * np.log(...) ?
+# FIXME:
+slow_time_fft_db = 20 * np.log10(np.abs(slow_time_fft)/np.max(np.abs(slow_time_fft)) + 1e-12) #/ np.max(np.abs(slow_time_fft)) # + 1e-12 to avoid log(0) #? 20* ?
 
 plt.figure(figsize=(10, 6))
 plt.imshow(
     #np.abs(slow_time_fft_st),
-    np.abs(slow_time_fft),
-    # slow_time_fft_st_db, # TODO: ? in dB
+    #np.abs(slow_time_fft),
+    slow_time_fft_db, # TODO: ? in dB
+    vmax=np.max(slow_time_fft_db),
+    #vmin=0.8*np.mean(slow_time_fft_db),
+    vmin=np.max(slow_time_fft_db)-20,
+
     aspect="auto",
     cmap="jet",
     # normal extent:
@@ -253,19 +260,23 @@ plt.imshow(
 
     # flipped extent:
     # extent=[doppler_bins[-1], doppler_bins[0], range_bins[0], range_bins[-1]], #flipud
-    extent=[doppler_bins[0], doppler_bins[-1], range_bins[0], range_bins[-1]], #flipud and fliplr
+    #extent=[doppler_bins[0], doppler_bins[-1], range_bins[0], range_bins[-1]], #flipud and fliplr
+    extent=[-max_speed, max_speed, 0, max_range], #fliplr
 )
 plt.title("Range-Doppler Map (RDM)")
-plt.xlabel("Doppler Bins")
-plt.ylabel("Range Bins")
+#plt.xlabel("Doppler Bins")
+plt.xlabel("Speed (m/s)")
+#plt.ylabel("Range Bins")
+plt.ylabel("Range (m)")
 plt.colorbar(label="Amplitude")
-# plt.colorbar(label="Amplitude (dB)")
+#plt.colorbar(label="Amplitude (dB)")
 plt.show()
-#! TODO: put range and doppler axes in meters and Hz ?
+#! TODO: put range and doppler axes in meters and Hz or speed m/s ?
 
 
 
 def plot():
+    #! not used (yet?)
     ## Affichage
     # plt.figure(figsize=(12, 10))
     ## Signal FMCW

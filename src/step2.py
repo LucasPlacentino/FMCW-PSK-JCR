@@ -14,14 +14,13 @@ import step1
     Step 2: PSK Modulation of FMCW Signal
 """
 
-"why?"
 # test:
-a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
-b = np.reshape(a, (2, 6))
-c = np.transpose(b)
-print(a)
-print(b)
-print(c)
+#a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
+#b = np.reshape(a, (2, 6))
+#c = np.transpose(b)
+#print(a)
+#print(b)
+#print(c)
 
 
 # Parameters
@@ -40,7 +39,7 @@ max_range = 20  # m, given
 max_speed = 2  # m/s, given
 tau_max = (2 * max_range) / c  # maximum possible delay
 #number_of_targets = 5  # arbitrary # could be asked for input
-number_of_targets = int(input("Enter number of targets (int), e.i 5 : "))
+number_of_targets = int(input("Enter number of targets (int), i.e 5 : "))
 guard_samples = 5 # given
 kappa = 1 # simplification
 
