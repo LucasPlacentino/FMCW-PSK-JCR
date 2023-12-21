@@ -42,6 +42,7 @@ tau_max = (2 * max_range) / c  # maximum possible delay
 #number_of_targets = 5  # arbitrary # could be asked for input
 number_of_targets = int(input("Enter number of targets (int), e.i 5 : "))
 guard_samples = 5 # given
+kappa = 1 # simplification
 
 number_of_simulation_samples_one_chirp = int(F_simulation_sampling_freq * T_chirp_duration) # number of SIMULATION samples over 1 chirp
 print("number_of_simulation_samples_one_chirp: ", number_of_simulation_samples_one_chirp)
@@ -135,10 +136,11 @@ def target_contribution(target_delay, target_velocity):#(target_range, target_ve
     #delay = (2 * target_range) / c
     #freq_shift = 2 * target_velocity * f_c / c
 
-    R_0_initial_range = c * target_delay / 2
+    R_0_initial_range = c * target_delay / 2 # from the linear movement simplification
     doppler_freq = 2 * target_velocity * f_c / c
     beat_frequency = 2 * R_0_initial_range * Beta_slope / c
-    kappa = np.exp(1j*4*np.pi*R_0_initial_range*f_c/c)*np.exp(1j*(-2)*np.pi* (Beta_slope**2) * (R_0_initial_range**2) / (c**2)) # ? complex factor
+    #kappa = np.exp(1j*4*np.pi*R_0_initial_range*f_c/c)*np.exp(1j*(-2)*np.pi* (Beta_slope**2) * (R_0_initial_range**2) / (c**2)) # ? complex factor
+    #kappa = 1 # see constants beginning of file
     t_prime = np.arange(0, T_chirp_duration, T_chirp_duration / (N_fast_time_fft_size + guard_samples)) #! "sampled time index t′ (the fast time index)" #? or t over 1 chirp $t' \in [0,T]$ ?
     #print("t_prime shape:",t_prime.shape)
     #print(t_prime)
@@ -168,7 +170,7 @@ print("signal_target shape",signal_target.shape)
 
 
 # ---- add AWGN ----
-SNR = int(input("SNR (negative dB) : ")) # dB
+SNR = int(input("SNR in dB (negative for more noise) : ")) # dB
 noise_power = 10**(-SNR/20) #! /10 ? /20 ?
 #noise = np.random.normal(0, noise_power, signal_target.shape)
 AWGN = np.random.normal(0, noise_power, len(signal_target)) + 1j * np.random.normal(0, 1, len(signal_target)) # complex noise, both real and imaginary parts are independant and are white noise
