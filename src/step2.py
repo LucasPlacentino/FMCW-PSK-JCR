@@ -22,6 +22,7 @@ import step1
 #print(b)
 #print(c)
 
+DEBUG = False
 
 # Parameters
 T_chirp_duration = 2e-4  # seconds, chirp duration: 0.1 ms to 0.4 ms
@@ -104,7 +105,7 @@ print("FMCW shape:",FMCW_over_K_chirps.shape)
 
 # N-FFT and K-FFT can be combined into a single 2D FFT of the N x K matrix of samples => Range Doppler Map (RDM)
 
-target_scale = 10
+target_scale = 95 #100
 target_delays = (
     np.random.rand(number_of_targets) * tau_max
 )  # random delay for each target
@@ -113,10 +114,11 @@ target_velocities = (
 )  # random speed for each target
 
 #debug target:
-target_delays = np.concatenate((target_delays,[2*10/c, 2*19/c])) # 10m, 19m
-target_velocities = np.concatenate((target_velocities,[1e-9, -1.9])) # 0m/s, -1.9m/s
-number_of_targets += 2
-print("############### /!\\ DEBUG: debug target(s) added ##############")
+if DEBUG:
+    target_delays = np.concatenate((target_delays,[2*10/c, 2*19/c])) # 10m, 19m
+    target_velocities = np.concatenate((target_velocities,[1e-9, -1.9])) # 0m/s, -1.9m/s
+    number_of_targets += 2
+    print("############### /!\\ DEBUG: debug target(s) added ##############")
 
 for i in range(number_of_targets):
     print(
@@ -256,7 +258,7 @@ slow_time_fft = np.fliplr(slow_time_fft)
 # FIXME:
 slow_time_fft_db = 20 * np.log10(np.abs(slow_time_fft)/np.max(np.abs(slow_time_fft)) + 1e-12) #/ np.max(np.abs(slow_time_fft)) # + 1e-12 to avoid log(0)
 
-plt.figure(figsize=(10, 6))
+plt.figure(figsize=(9, 8))
 plt.imshow(
 
     #np.abs(slow_time_fft),
@@ -265,7 +267,8 @@ plt.imshow(
     #vmin=0.8*np.mean(slow_time_fft_db),
     vmin=np.max(slow_time_fft_db)-20,
 
-    aspect="auto",
+    #aspect="auto",
+    aspect=2*max_speed/max_range *1.2,
     cmap="jet",
     # normal extent:
     ## extent=[0, slow_time_fft_st.shape[1], 0, slow_time_fft_st.shape[0]],
@@ -283,8 +286,8 @@ plt.title("Range-Doppler Map (RDM)")
 plt.xlabel("Target Speed (m/s)")
 #plt.ylabel("Range Bins")
 plt.ylabel("Target Range (m)")
-plt.colorbar(label="Amplitude")
-# plt.colorbar(label="Amplitude (dB)")
+#plt.colorbar(label="Amplitude")
+plt.colorbar(label="Amplitude (dB)")
 plt.show()
 #! TODO: put range and doppler axes in meters and Hz or m/s ?
 
