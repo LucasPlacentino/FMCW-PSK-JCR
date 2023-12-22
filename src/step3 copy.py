@@ -7,7 +7,7 @@ import step1
 DEBUG = False
 
 T_chirp_duration = 4e-4  
-B_freq_range = 200e6  
+B_freq_range = 200e6  #
 f_c = 24e9  
 F_simulation_sampling_freq = 512e6  
 F_radar_sampling_freq = 2e6  
