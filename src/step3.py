@@ -335,19 +335,24 @@ def plot():
         # P_false_alarm = 0 # false alarm probability
         P_false_alarm = np.zeros(len(fa_threshold_values))  # false alarms probability
 
-        # TODO:
+        # FIXME: ?
         rdm = np.abs(rdm_noise(errors_test_number_of_targets, SNR_value, plot=False, in_db=False))
-        print("DEBUG: max rdm fa",np.max(rdm),"min rdm fa",np.min(rdm))
+        #print("DEBUG: max rdm fa",np.max(rdm),"min rdm fa",np.min(rdm))
         normalized_rdm = rdm / np.max(rdm) # normalize RDM
+        #print("DEBUG: max normalized_rdm fa",np.max(normalized_rdm),"min normalized_rdm fa",np.min(normalized_rdm))
+        #print("DEBUG: normalized_rdm shape",normalized_rdm.shape,"len:",len(normalized_rdm))
 
-        fa_threshold_values_lin = 10**(fa_threshold_values/20) # threshold in linear scale #? -fa_threshold_values ?
+        number_of_values = normalized_rdm.shape[0] * normalized_rdm.shape[1]
+
+        fa_threshold_values_lin = 10**(fa_threshold_values/20) # threshold in linear scale
+        #print("DEBUG: fa_threshold_values_lin",fa_threshold_values_lin)
 
         for i, threshold in enumerate(fa_threshold_values_lin):
-            #! FIXME: proba is > 1 ? => normalize RDM ?
+            #! FIXME: ?
             false_alarm = np.sum(normalized_rdm > threshold) # each sample of the signal is a statistics random variable
-            print("DEBUG: false_alarm",false_alarm)
-            P_false_alarm[i] = false_alarm / len(normalized_rdm)
-            print("DEBUG: P_false_alarm",P_false_alarm[i])
+            #print("DEBUG: false_alarm",false_alarm)
+            P_false_alarm[i] = false_alarm / number_of_values
+            #print("DEBUG: P_false_alarm",P_false_alarm[i])
 
         return P_false_alarm
 
@@ -372,19 +377,24 @@ def plot():
         # P_mis_detection = np.zeros(len(threshold_values)) # mis-detections probability
         P_mis_detection = np.zeros(len(md_threshold_values))  # mis-detections probability
 
-        # TODO:
+        # FIXME: ?
         rdm = np.abs(rdm_noise(errors_test_number_of_targets, SNR_value, plot=False, in_db=False))
-        print("DEBUG: max rdm md",np.max(rdm),"min rdm md",np.min(rdm))
+        #print("DEBUG: max rdm md",np.max(rdm),"min rdm md",np.min(rdm))
         normalized_rdm = rdm / np.max(rdm) # normalize RDM
+        #print("DEBUG: max normalized_rdm md",np.max(normalized_rdm),"min normalized_rdm md",np.min(normalized_rdm))
+        #print("DEBUG: normalized_rdm shape",normalized_rdm.shape,"len:",len(normalized_rdm))
 
-        md_threshold_values_lin = 10**(md_threshold_values/20) # threshold in linear scale #? -md_threshold_values ?
+        number_of_values = normalized_rdm.shape[0] * normalized_rdm.shape[1]
+
+        md_threshold_values_lin = 10**(md_threshold_values/20) # threshold in linear scale
+        #print("DEBUG: md_threshold_values_lin",md_threshold_values_lin)
 
         for i, threshold in enumerate(md_threshold_values_lin):
-            #! FIXME: proba is > 1 ? => normalize RDM ?
+            #! FIXME: ?
             mis_detection = np.sum(normalized_rdm < threshold)
-            print("DEBUG: mis_detection",mis_detection)
-            P_mis_detection[i] = mis_detection / len(normalized_rdm)
-            print("DEBUG: P_mis_detection",P_mis_detection[i])
+            #print("DEBUG: mis_detection",mis_detection)
+            P_mis_detection[i] = mis_detection / number_of_values
+            #print("DEBUG: P_mis_detection",P_mis_detection[i])
         
         return P_mis_detection
 
