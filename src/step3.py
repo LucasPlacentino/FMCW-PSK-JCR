@@ -298,29 +298,6 @@ def plot():
         plot=True
     )
 
-    #! not used (TODO: yet?)
-    ## Affichage
-    # plt.figure(figsize=(12, 10))
-    ## Signal FMCW
-    # plt.subplot(3, 1, 1)
-    # plt.plot(t, FMCW_over_K_chirps.real, label="Real")
-    # plt.plot(t, FMCW_over_K_chirps.imag, label="Imaginary", #linestyle="--")
-    # plt.grid()
-    # plt.title("PSK Modulated FMCW Signal")
-    # plt.xlabel("Time (s)")
-    # plt.ylabel("Amplitude")
-    # plt.legend()
-    ## Spectre du signal FMCW
-    # plt.subplot(3, 1, 2)
-    # plt.plot(fft_freq_shifted, np.abs#(fft_fmcw_signal_shifted))
-    # plt.grid()
-    # plt.title("Spectrum of PSK Modulated FMCW Signal")
-    # plt.xlabel("Frequency (Hz)")
-    # plt.ylabel("Magnitude")
-    # plt.tight_layout()
-    plt.show()
-
-
     errors_test_number_of_targets = 1 # arbitrary
     SNR_values = np.linspace(-20, 5, 6)  # arbitrary values, yea,
     steps = 128 # arbitrary
