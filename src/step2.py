@@ -105,6 +105,7 @@ print("FMCW shape:",FMCW_over_K_chirps.shape)
 
 # N-FFT and K-FFT can be combined into a single 2D FFT of the N x K matrix of samples => Range Doppler Map (RDM)
 
+print("Generating random targets...")
 target_scale = 95 #100
 target_delays = (
     np.random.rand(number_of_targets) * tau_max
@@ -255,7 +256,7 @@ slow_time_fft = np.fliplr(slow_time_fft)
 
 ## in dB:
 # slow_time_fft_st_db = 20 * np.log10(np.abs(slow_time_fft_st) + 1e-12) / np.max(np.abs(slow_time_fft_st)) # + 1e-12 to avoid log(0) #? 20 * np.log(...) ?
-# FIXME:
+# FIXME: needs fixing ?
 slow_time_fft_db = 20 * np.log10(np.abs(slow_time_fft)/np.max(np.abs(slow_time_fft)) + 1e-12) #/ np.max(np.abs(slow_time_fft)) # + 1e-12 to avoid log(0)
 
 plt.figure(figsize=(9, 8))

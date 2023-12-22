@@ -108,6 +108,7 @@ print("FMCW shape:",FMCW_over_K_chirps.shape)
 # N-FFT and K-FFT can be combined into a single 2D FFT of the N x K matrix of samples => Range Doppler Map (RDM)
 
 def rdm_noise(number_of_targets, SNR, plot=False):
+    print("Generating random targets...")
     target_scale = 95 #100
     target_delays = (
         np.random.rand(number_of_targets) * tau_max# *target_scale#
@@ -248,7 +249,7 @@ def rdm_noise(number_of_targets, SNR, plot=False):
 
     ## in dB:
     # slow_time_fft_st_db = 20 * np.log10(np.abs(slow_time_fft_st) + 1e-12) / np.max(np.abs(slow_time_fft_st)) # + 1e-12 to avoid log(0) #? 20 * np.log(...) ?
-    # FIXME:
+    # FIXME: needs fixing ?
     slow_time_fft_db = 20 * np.log10(np.abs(slow_time_fft)/np.max(np.abs(slow_time_fft)) + 1e-12) #/ np.max(np.abs(slow_time_fft)) # + 1e-12 to avoid log(0)
 
     if plot:
@@ -319,30 +320,31 @@ def plot():
     plt.show()
 
 
-    #! TODO: use SNR_values to recompute another RDM
     errors_test_number_of_targets = 1 # arbitrary
-    SNR_values = np.linspace(-20, 10, 8)  # arbitrary values, yea,
+    SNR_values = np.linspace(-20, 5, 6)  # arbitrary values, yea,
     steps = 128 # arbitrary
     # we vary the threshold values
-    threshold_values = np.linspace(-20, 0, steps)  #! arbitrary values: yes see from RDM
+    threshold_values = np.linspace(-20, 0, steps)  # arbitrary values: yes see from RDM
+
+    #! TODO: normalize RDM and use thresholds \in [0, 1] ?
 
     #! TODO: False alarm probability
 
-    def false_alarm_probability(fa_threshold_values):
+    def false_alarm_probability(fa_threshold_values, SNR_value):
         # P_false_alarm = 0 # false alarm probability
         P_false_alarm = np.zeros(len(fa_threshold_values))  # false alarms probability
 
         # TODO:
-        rdm = rdm_noise(errors_test_number_of_targets, SNR_values[0], False)
+        rdm = rdm_noise(errors_test_number_of_targets, SNR_value, False)
 
         for i, threshold in enumerate(fa_threshold_values):
-            #! FIXME: proba is > 1 ?
+            #! FIXME: proba is > 1 ? => normalize RDM ?
             false_alarm = np.sum(rdm > threshold)
             P_false_alarm[i] = false_alarm / len(rdm)
 
         return P_false_alarm
 
-    P_false_alarm = false_alarm_probability(threshold_values)
+    P_false_alarm = false_alarm_probability(threshold_values, SNR_value=user_SNR)
 
     plt.figure(figsize=(8, 6))
     plt.plot(threshold_values, P_false_alarm) #? plot with threshold in dB ?
@@ -358,22 +360,22 @@ def plot():
 
     #SNR_values = np.arange(0, 20, 2) # ?
 
-    def mis_detection_probability(md_threshold_values):
+    def mis_detection_probability(md_threshold_values, SNR_value):
         # P_mis_detection = 0 # mis-detection probability
         # P_mis_detection = np.zeros(len(threshold_values)) # mis-detections probability
         P_mis_detection = np.zeros(len(md_threshold_values))  # mis-detections probability
 
         # TODO:
-        rdm = rdm_noise(errors_test_number_of_targets, SNR_values[0], False)
+        rdm = rdm_noise(errors_test_number_of_targets, SNR_value, False)
 
         for i, threshold in enumerate(md_threshold_values):
-            #! FIXME: proba is > 1 ?
+            #! FIXME: proba is > 1 ? => normalize RDM ?
             mis_detection = np.sum(rdm < threshold)
             P_mis_detection[i] = mis_detection / len(rdm)
         
         return P_mis_detection
 
-    P_mis_detection = mis_detection_probability(threshold_values)
+    P_mis_detection = mis_detection_probability(threshold_values, SNR_value=user_SNR)
 
     plt.figure(figsize=(8, 6))
     plt.plot(threshold_values, P_mis_detection)
@@ -384,15 +386,15 @@ def plot():
     # plt.tight_layout()
     plt.show()
 
-    #! TODO: Receiver operating characteristic curve (ROC) for different values of the SNR (or threshold?)
-    #! for different values of the SNR
 
     plt.figure(figsize=(8, 8))
-    plt.plot(P_false_alarm, P_mis_detection, label="ROC curve")
-    #for i, SNR in enumerate(SNR_values):
-    #    fa_threshold_values = 
-    #    md_threshold_values = 
-    #    plt.plot(false_alarm_probability(fa_threshold_values), mis_detection_probability(md_threshold_values), label="ROC curve SNR: "+str(SNR)+"dB")
+    #plt.plot(P_false_alarm, P_mis_detection, label="ROC curve")
+    for i, SNR in enumerate(SNR_values):
+        snr_string = "{:.1f}dB".format(SNR) # format with only 1 decimal
+        plt.plot(false_alarm_probability(threshold_values, SNR), mis_detection_probability(threshold_values, SNR), label="ROC curve SNR: "+snr_string)
+    # TODO: add linear dotted line for reference ?
+    #plt.plot(np.linspace(0, 1, 100), np.linspace(0, 1, 100), linestyle="--")
+    
     plt.title("Receiver Operating Characteristic Curves for different SNR values")
     plt.xlabel("Probability of false alarm")
     plt.ylabel("Probability of mis-detection")
