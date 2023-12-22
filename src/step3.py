@@ -107,7 +107,7 @@ print("FMCW shape:",FMCW_over_K_chirps.shape)
 
 # N-FFT and K-FFT can be combined into a single 2D FFT of the N x K matrix of samples => Range Doppler Map (RDM)
 
-def rdm_noise(number_of_targets, SNR, plot=False):
+def rdm_noise(number_of_targets, SNR, plot=False, in_db=True):
     print("Generating random targets...")
     target_scale = 95 #100
     target_delays = (
@@ -284,6 +284,8 @@ def rdm_noise(number_of_targets, SNR, plot=False):
         plt.colorbar(label="Amplitude (dB)")
         plt.show()
 
+    if not in_db:
+        return slow_time_fft
     return slow_time_fft_db
 
 
@@ -334,12 +336,18 @@ def plot():
         P_false_alarm = np.zeros(len(fa_threshold_values))  # false alarms probability
 
         # TODO:
-        rdm = rdm_noise(errors_test_number_of_targets, SNR_value, False)
+        rdm = np.abs(rdm_noise(errors_test_number_of_targets, SNR_value, plot=False, in_db=False))
+        print("DEBUG: max rdm fa",np.max(rdm),"min rdm fa",np.min(rdm))
+        normalized_rdm = rdm / np.max(rdm) # normalize RDM
 
-        for i, threshold in enumerate(fa_threshold_values):
+        fa_threshold_values_lin = 10**(fa_threshold_values/20) # threshold in linear scale #? -fa_threshold_values ?
+
+        for i, threshold in enumerate(fa_threshold_values_lin):
             #! FIXME: proba is > 1 ? => normalize RDM ?
-            false_alarm = np.sum(rdm > threshold)
-            P_false_alarm[i] = false_alarm / len(rdm)
+            false_alarm = np.sum(normalized_rdm > threshold) # each sample of the signal is a statistics random variable
+            print("DEBUG: false_alarm",false_alarm)
+            P_false_alarm[i] = false_alarm / len(normalized_rdm)
+            print("DEBUG: P_false_alarm",P_false_alarm[i])
 
         return P_false_alarm
 
@@ -365,12 +373,18 @@ def plot():
         P_mis_detection = np.zeros(len(md_threshold_values))  # mis-detections probability
 
         # TODO:
-        rdm = rdm_noise(errors_test_number_of_targets, SNR_value, False)
+        rdm = np.abs(rdm_noise(errors_test_number_of_targets, SNR_value, plot=False, in_db=False))
+        print("DEBUG: max rdm md",np.max(rdm),"min rdm md",np.min(rdm))
+        normalized_rdm = rdm / np.max(rdm) # normalize RDM
 
-        for i, threshold in enumerate(md_threshold_values):
+        md_threshold_values_lin = 10**(md_threshold_values/20) # threshold in linear scale #? -md_threshold_values ?
+
+        for i, threshold in enumerate(md_threshold_values_lin):
             #! FIXME: proba is > 1 ? => normalize RDM ?
-            mis_detection = np.sum(rdm < threshold)
-            P_mis_detection[i] = mis_detection / len(rdm)
+            mis_detection = np.sum(normalized_rdm < threshold)
+            print("DEBUG: mis_detection",mis_detection)
+            P_mis_detection[i] = mis_detection / len(normalized_rdm)
+            print("DEBUG: P_mis_detection",P_mis_detection[i])
         
         return P_mis_detection
 
