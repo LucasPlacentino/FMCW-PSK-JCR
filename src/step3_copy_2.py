@@ -104,13 +104,22 @@ def rdm_noise(number_of_targets, SNR, plot=False, in_db=True):
     slow_time_fft_db = 20 * np.log10(np.abs(slow_time_fft)/np.max(np.abs(slow_time_fft)) + 1e-12)
 
     if plot:
-        plt.figure(figsize=(10, 6))
-        plt.imshow(slow_time_fft_db, vmax=np.max(slow_time_fft_db), vmin=np.max(slow_time_fft_db)-20, aspect="auto", cmap="jet", extent=[-max_speed, max_speed, 0, max_range],)
-        plt.title("Range-Doppler Map (RDM), SNR = " + str(SNR) + "dB")
-        plt.xlabel("Target Speed (m/s)")
-        plt.ylabel("Target Range (m)")
-        plt.colorbar(label="Amplitude (dB)")
-        plt.show()
+        if in_db:
+            plt.figure(figsize=(10, 6))
+            plt.imshow(slow_time_fft_db, vmax=np.max(slow_time_fft_db), vmin=np.max(slow_time_fft_db)-20, aspect="auto", cmap="jet", extent=[-max_speed, max_speed, 0, max_range],)
+            plt.title("Range-Doppler Map (RDM), SNR = " + str(SNR) + "dB")
+            plt.xlabel("Target Speed (m/s)")
+            plt.ylabel("Target Range (m)")
+            plt.colorbar(label="Amplitude (dB)")
+            plt.show()
+        else:
+            plt.figure(figsize=(10, 6))
+            plt.imshow(np.abs(slow_time_fft), aspect="auto", cmap="jet", extent=[-max_speed, max_speed, 0, max_range],)
+            plt.title("Range-Doppler Map (RDM), SNR = " + str(SNR) + "dB")
+            plt.xlabel("Target Speed (m/s)")
+            plt.ylabel("Target Range (m)")
+            plt.colorbar(label="Amplitude")
+            plt.show()
 
     if not in_db:
         return slow_time_fft
@@ -119,16 +128,23 @@ def rdm_noise(number_of_targets, SNR, plot=False, in_db=True):
 def plot():
     rdm_noise(number_of_targets=user_number_of_targets, SNR=user_SNR, plot=True)
 
-    errors_test_number_of_targets = 5
-    SNR_values = np.linspace(-100, 10, 8)
-    steps = 40000
-    threshold_values = np.linspace(-30, 2, steps)
+    rdm_noise(number_of_targets=user_number_of_targets, SNR=user_SNR, plot=True, in_db=False)
+
+    errors_test_number_of_targets = 20
+    SNR_values = np.linspace(-100, 10, 8) # -20, 20, 6
+    steps = 800
+    threshold_values = np.linspace(-20, 0, steps)
+    threshold_values_lin = np.linspace(0, 470, steps)
+    noise_test = 100
 
     def false_alarm_probability(fa_threshold_values, SNR_value):
         P_false_alarm = np.zeros(len(fa_threshold_values))  
 
         rdm = np.abs(rdm_noise(errors_test_number_of_targets, SNR_value, plot=False, in_db=False))
-        normalized_rdm = rdm / np.max(rdm) 
+        normalized_rdm = rdm / np.max(rdm)
+        #rdm_lin = np.abs(rdm_noise(errors_test_number_of_targets, SNR_value, plot=False, in_db=False))
+        #normalized_rdm = rdm_lin / np.max(rdm_lin)
+        #fa_threshold_values_lin = fa_threshold_values
 
         number_of_values = normalized_rdm.shape[0] * normalized_rdm.shape[1]
 
@@ -137,17 +153,18 @@ def plot():
         for i, threshold in enumerate(fa_threshold_values_lin):
             #false_alarm = np.sum(normalized_rdm > threshold) 
 
-            targets_found = np.sum(normalized_rdm > threshold)
+            targets_found = np.sum(normalized_rdm > (threshold/max(fa_threshold_values_lin)))
             #print("targets_found",targets_found)
 
             number_false_alarm = max(targets_found - errors_test_number_of_targets, 0)
 
             #P_false_alarm[i] = false_alarm / number_of_values
-            P_false_alarm[i] = number_false_alarm / number_of_values
+            P_false_alarm[i] = number_false_alarm / (number_of_values-errors_test_number_of_targets)
 
         return P_false_alarm
 
-    P_false_alarm = false_alarm_probability(threshold_values, SNR_value=user_SNR)
+    #P_false_alarm = false_alarm_probability(threshold_values, SNR_value=user_SNR)
+    P_false_alarm = false_alarm_probability(threshold_values_lin, SNR_value=user_SNR)
 
     plt.figure(figsize=(8, 6))
     plt.plot(threshold_values, P_false_alarm) 
@@ -161,7 +178,10 @@ def plot():
         P_mis_detection = np.zeros(len(md_threshold_values))  
 
         rdm = np.abs(rdm_noise(errors_test_number_of_targets, SNR_value, plot=False, in_db=False))
-        normalized_rdm = rdm / np.max(rdm) 
+        normalized_rdm = rdm / np.max(rdm)
+        #rdm_lin = np.abs(rdm_noise(errors_test_number_of_targets, SNR_value, plot=False, in_db=False))
+        #normalized_rdm = rdm_lin / np.max(rdm_lin)
+        #md_threshold_values_lin = md_threshold_values
 
         number_of_values = normalized_rdm.shape[0] * normalized_rdm.shape[1]
 
@@ -169,8 +189,8 @@ def plot():
 
         for i, threshold in enumerate(md_threshold_values_lin):
             #mis_detection = np.sum(normalized_rdm < threshold)
-            targets_found = np.sum(normalized_rdm > threshold)
-            print("targets_found md",targets_found)
+            targets_found = np.sum(normalized_rdm > (threshold/max(md_threshold_values_lin)))
+            #print("targets_found md",targets_found)
 
             #targets_found_prob = 1 - targets_found / errors_test_number_of_targets
 
@@ -181,7 +201,8 @@ def plot():
         
         return P_mis_detection
 
-    P_mis_detection = mis_detection_probability(threshold_values, SNR_value=user_SNR)
+    #P_mis_detection = mis_detection_probability(threshold_values, SNR_value=user_SNR)
+    P_mis_detection = mis_detection_probability(threshold_values_lin, SNR_value=user_SNR)
 
     plt.figure(figsize=(8, 6))
     plt.plot(threshold_values, P_mis_detection)
