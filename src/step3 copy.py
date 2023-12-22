@@ -41,6 +41,7 @@ def rdm_noise(number_of_targets, SNR, plot=False, in_db=True):
     target_scale = 95 
     target_delays = np.random.rand(number_of_targets) * tau_max
     target_velocities = np.random.uniform(-max_speed, max_speed, number_of_targets)
+    slow_time_fft_db = 20 * np.log10(np.abs(slow_time_fft)/np.max(np.abs(slow_time_fft)) + 1e-12)
 
     if DEBUG:
         target_delays = np.concatenate((target_delays,[2*10/c, 2*19/c])) 
@@ -125,17 +126,15 @@ def plot():
     threshold_values = np.linspace(-20, 0, steps)  
 
     def false_alarm_probability(fa_threshold_values, SNR_value):
-        P_false_alarm = np.zeros(len(fa_threshold_values))  
+        P_false_alarm = np.zeros(len(fa_threshold_values))
 
         rdm = np.abs(rdm_noise(errors_test_number_of_targets, SNR_value, plot=False, in_db=False))
-        normalized_rdm = rdm / np.max(rdm) 
+        normalized_rdm = rdm / np.max(rdm)
 
-        number_of_values = normalized_rdm.shape[0] * normalized_rdm.shape[1]
-
-        fa_threshold_values_lin = 10**(fa_threshold_values/20) 
+        fa_threshold_values_lin = 10**(fa_threshold_values/20)  # <-- Conversion linéaire
 
         for i, threshold in enumerate(fa_threshold_values_lin):
-            false_alarm = np.sum(normalized_rdm > threshold) 
+            false_alarm = np.sum(normalized_rdm > threshold)
             P_false_alarm[i] = false_alarm / number_of_values
 
         return P_false_alarm
