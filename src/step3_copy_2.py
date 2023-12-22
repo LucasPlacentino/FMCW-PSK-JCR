@@ -133,7 +133,7 @@ def plot():
     rdm_noise(number_of_targets=user_number_of_targets, SNR=user_SNR, plot=True, in_db=False)
 
     errors_test_number_of_targets = 50
-    SNR_values = np.linspace(-20, 0, 8) # -20, 20, 6
+    SNR_values = np.linspace(-80, 0, 8) # -20, 20, 6
     steps = 800
     threshold_values = np.linspace(-20, 0, steps)
     threshold_values_lin = np.linspace(0, 470, steps)
