@@ -290,7 +290,6 @@ plt.ylabel("Target Range (m)")
 #plt.colorbar(label="Amplitude")
 plt.colorbar(label="Amplitude (dB)")
 plt.show()
-#! TODO: put range and doppler axes in meters and Hz or m/s ?
 
 # --- 4. --- Compute the range and Doppler resolutions and discuss the relevance of the radar parameters for the considered scenario.
 
@@ -334,13 +333,13 @@ def plot():
     # plt.tight_layout()
     plt.show()
 
-    #! done ? TODO: Simulate the impact of the single-target channel on the FMCW signal (the extension to a multi-target channel is obviously the sum of the target contributions)
+    #* done ? - Simulate the impact of the single-target channel on the FMCW signal (the extension to a multi-target channel is obviously the sum of the target contributions)
 
-    #! should work ? TODO: Implement the radar processing: mixing with the transmitted signal, sampling at F_s, S/P conversion,FFT over the fast and slow time dimensions
+    #* done, should work - Implement the radar processing: mixing with the transmitted signal, sampling at F_s, S/P conversion,FFT over the fast and slow time dimensions
 
-    #! weird TODO: RDM obtained at the output of the 2 dimensional FFT for multiple randomly generated scenarios. Identify the correct targets positions on the RDM.
+    #* done? should work - RDM obtained at the output of the 2 dimensional FFT for multiple randomly generated scenarios. Identify the correct targets positions on the RDM.
 
-    # * DONE Compute the range and Doppler resolutions and discuss the relevance of the radar parameters for the considered scenario.
+    # DONE - Compute the range and Doppler resolutions and discuss the relevance of the radar parameters for the considered scenario.
 
 
 if __name__ == "__main__":
